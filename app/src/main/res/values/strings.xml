@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Popular Movies</string>
+    <string name="no_connection">No internet connection. Try again by clicking \'Refresh\'</string>
+    <string name="poster_description">Movie poster</string>
+    <string name="menu_most_popular">Most popular</string>
+    <string name="menu_top_rated">Top rated</string>
+</resources>
