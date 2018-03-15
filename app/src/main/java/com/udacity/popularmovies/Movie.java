@@ -14,23 +14,27 @@ class Movie implements Parcelable {
   private String title;
   private String posterUrl;
   private String overview;
-  private int voteAverage;
-  private long releaseDate;
+  private float voteAverage;
+  private int releaseDate;
+  private int runtime;
 
-  Movie(String title, String posterUrl, String overview, int voteAverage, long releaseDate) {
+  Movie(String title, String posterUrl, String overview, float voteAverage, int releaseDate,
+        int runtime) {
     this.title = title;
     this.posterUrl = posterUrl;
     this.overview = overview;
     this.voteAverage = voteAverage;
     this.releaseDate = releaseDate;
+    this.runtime = runtime;
   }
 
   private Movie(Parcel in) {
     title = in.readString();
     posterUrl = in.readString();
     overview = in.readString();
-    voteAverage = in.readInt();
-    releaseDate = in.readLong();
+    voteAverage = in.readFloat();
+    releaseDate = in.readInt();
+    runtime = in.readInt();
   }
 
   @Override
@@ -38,8 +42,9 @@ class Movie implements Parcelable {
     dest.writeString(title);
     dest.writeString(posterUrl);
     dest.writeString(overview);
-    dest.writeInt(voteAverage);
-    dest.writeLong(releaseDate);
+    dest.writeFloat(voteAverage);
+    dest.writeInt(releaseDate);
+    dest.writeInt(runtime);
   }
 
   @Override
@@ -71,11 +76,15 @@ class Movie implements Parcelable {
     return overview;
   }
 
-  int getVoteAverage() {
+  float getVoteAverage() {
     return voteAverage;
   }
 
-  long getReleaseDate() {
+  int getReleaseDate() {
     return releaseDate;
+  }
+
+  int getRuntime() {
+    return runtime;
   }
 }

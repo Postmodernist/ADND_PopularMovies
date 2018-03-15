@@ -23,7 +23,8 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
   private static final String TAG = MainActivity.class.getSimpleName();
 
   private MoviesAdapter adapter;
-  private int gridColumnsNumber = 2;
+  private int gridColumnsNumber;
+  private int gridRowHeight;
 
   @BindView(R.id.rv_movies)
   RecyclerView moviesView;
@@ -38,9 +39,10 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
     setContentView(R.layout.activity_main);
     ButterKnife.bind(this);
 
+    initGridDimens();
     GridLayoutManager layoutManager = new GridLayoutManager(this, gridColumnsNumber);
     moviesView.setLayoutManager(layoutManager);
-    adapter = new MoviesAdapter(this, getGridRowHeight());
+    adapter = new MoviesAdapter(this, gridRowHeight);
     moviesView.setAdapter(adapter);
 
     if (isOnline()) {
@@ -57,9 +59,6 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
     intent.putExtra(Movie.extraKey, movie);
     startActivity(intent);
   }
-
-  // -----------------------------------------------------------------------------------------------
-  // Options menu
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
@@ -80,8 +79,28 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
     return super.onOptionsItemSelected(item);
   }
 
-  // -----------------------------------------------------------------------------------------------
-  // Utils
+  /**
+   * Initialize the number of columns and row height of in RecyclerView grid
+   */
+  private void initGridDimens() {
+    int displayWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
+    int displayHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
+    int gridColumnsPortrait = getResources().getInteger(R.integer.grid_columns_portrait);
+    int gridColumnsLandscape = getResources().getInteger(R.integer.grid_columns_landscape);
+    gridColumnsNumber = displayWidth < displayHeight ? gridColumnsPortrait : gridColumnsLandscape;
+    int widthRatio = getResources().getInteger(R.integer.poster_width_ratio);
+    int heightRatio = getResources().getInteger(R.integer.poster_height_ratio);
+    gridRowHeight = displayWidth * heightRatio / (gridColumnsNumber * widthRatio);
+  }
+
+  /**
+   * Check internet connection
+   */
+  private boolean isOnline() {
+    ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+    NetworkInfo activeNetworkInfo = cm != null ? cm.getActiveNetworkInfo() : null;
+    return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+  }
 
   /**
    * Run background task to get movies data and feed it to the adapter
@@ -95,15 +114,6 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
   }
 
   /**
-   * Check internet connection
-   */
-  private boolean isOnline() {
-    ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-    NetworkInfo activeNetworkInfo = cm != null ? cm.getActiveNetworkInfo() : null;
-    return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
-  }
-
-  /**
    * Show movies grid
    */
   private void showMovies() {
@@ -112,20 +122,10 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
   }
 
   /**
-   * Show movies grid
+   * Show error message
    */
   private void showError() {
     moviesView.setVisibility(View.INVISIBLE);
     errorView.setVisibility(View.VISIBLE);
-  }
-
-  /**
-   * Return RecyclerView grid row height
-   */
-  private int getGridRowHeight() {
-    int displayWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
-    int gridItemWidth = 2;
-    int gridItemHeight = 3;
-    return displayWidth * gridItemHeight / (gridColumnsNumber * gridItemWidth);
   }
 }
