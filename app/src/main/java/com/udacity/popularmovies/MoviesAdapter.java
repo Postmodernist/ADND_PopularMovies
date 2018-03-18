@@ -17,16 +17,10 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
   private ViewGroup.LayoutParams itemLayoutParams;
 
   /**
-   * The interface that receives onClick messages
-   */
-  public interface MoviesOnClickHandler {
-    void onClick(Movie movie);
-  }
-
-  /**
    * MoviesAdapter constructor
+   *
    * @param clickHandler The on-click handler for this adapter.
-   * @param itemHeight The height of the items inflated by the adapter.
+   * @param itemHeight   The height of the items inflated by the adapter.
    */
   MoviesAdapter(MoviesOnClickHandler clickHandler, int itemHeight) {
     this.clickHandler = clickHandler;
@@ -60,9 +54,16 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
   /**
    * Set movies data and refresh adapter
    */
-  void setMoviesData(Movie[] moviesData) {
+  public void setMoviesData(Movie[] moviesData) {
     this.moviesData = moviesData;
     notifyDataSetChanged();
+  }
+
+  /**
+   * The interface that receives onClick messages
+   */
+  public interface MoviesOnClickHandler {
+    void onClick(Movie movie);
   }
 
   /**

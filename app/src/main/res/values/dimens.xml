@@ -2,6 +2,7 @@
     <dimen name="application_margin">16dp</dimen>
     <dimen name="application_spacing">8dp</dimen>
     <dimen name="progress_bar_size">42dp</dimen>
+    <dimen name="error_text_size">20sp</dimen>
     <integer name="grid_columns_portrait">2</integer>
     <integer name="grid_columns_landscape">3</integer>
     <integer name="poster_width_ratio">2</integer>
