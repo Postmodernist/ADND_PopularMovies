@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity
     scrollListener = new EndlessRecyclerViewScrollListener(layoutManager, STARTING_PAGE) {
       @Override
       public void onLoadMore(int page) {
-        if (totalPages > 0 && page > totalPages) {
+        if (!isOnline() || (totalPages > 0 && page > totalPages)) {
           return;
         }
         MainActivity.this.page = page;
@@ -236,5 +236,6 @@ public class MainActivity extends AppCompatActivity
     adapter.resetMoviesData();
     scrollListener.resetState();
     page = STARTING_PAGE;
+    showMovies();
   }
 }
