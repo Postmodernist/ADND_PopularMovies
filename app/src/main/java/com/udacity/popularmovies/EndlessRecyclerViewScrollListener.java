@@ -1,3 +1,8 @@
+/*
+ * Original solution:
+ * https://gist.github.com/nesquena/d09dc68ff07e845cc622
+ */
+
 package com.udacity.popularmovies;
 
 import android.support.v7.widget.GridLayoutManager;
