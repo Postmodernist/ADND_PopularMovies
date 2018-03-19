@@ -19,7 +19,7 @@ import java.util.Locale;
 
 public final class JsonUtils {
 
-  private static final String TAG = JsonUtils.class.getSimpleName();
+  private static final String TAG = "TAG_" + JsonUtils.class.getSimpleName();
   private static final Movie[] ZERO_MOVIE_ARRAY = new Movie[0];
   private static final String IMAGE_PLACEHOLDER =
       "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Image_placeholder.svg/500px-Image_placeholder.svg.png";
@@ -66,7 +66,8 @@ public final class JsonUtils {
       // Get movie values
       int id = getInt(jMovie, ID);
       String title = getString(jMovie, TITLE);
-      String posterUrl = !TextUtils.isEmpty(tmp = getString(jMovie, POSTER_PATH)) ?
+      tmp = getString(jMovie, POSTER_PATH);
+      String posterUrl = !TextUtils.isEmpty(tmp) && !tmp.equals("null") ?
           HttpUtils.buildPosterUrl(tmp).toString() : IMAGE_PLACEHOLDER;
       String overview = getString(jMovie, OVERVIEW);
       double voteAverage = getDouble(jMovie, VOTE_AVERAGE);

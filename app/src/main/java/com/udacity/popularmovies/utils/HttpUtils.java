@@ -17,7 +17,11 @@ import java.util.Scanner;
 
 public final class HttpUtils {
 
-  private static final String TAG = HttpUtils.class.getSimpleName();
+  // Sorting modes
+  public static final String SORT_BY_POPULARITY = "popularity.desc";
+  public static final String SORT_BY_RATING = "vote_average.desc";
+
+  private static final String TAG = "TAG_" + HttpUtils.class.getSimpleName();
 
   // TheMovieDB API base URL
   private static final String BASE_URL = "https://api.themoviedb.org/3";
@@ -33,6 +37,7 @@ public final class HttpUtils {
   private static final String language = "en-US";
   private static final String adult = "false";
   private static final String video = "false";
+  private static final String vote_count_min = "100";
 
   // Query parameter names
   private static final String DISCOVER_PATH = "discover/movie";
@@ -43,6 +48,7 @@ public final class HttpUtils {
   private static final String ADULT_PARAM = "include_adult";
   private static final String VIDEO_PARAM = "include_video";
   private static final String PAGE_PARAM = "page";
+  private static final String VOTE_COUNT_MIN_PARAM = "vote_count.gte";
 
   // HTTP connection parameters
   private static final int READ_TIMEOUT = 10000;  // milliseconds
@@ -59,18 +65,20 @@ public final class HttpUtils {
    * @param page   Page number
    */
   public static URL buildDiscoverQueryUrl(String sortBy, int page) {
-    Uri uri = BASE_URI.buildUpon()
+    Uri.Builder builder = BASE_URI.buildUpon()
         .appendEncodedPath(DISCOVER_PATH)
         .appendQueryParameter(API_KEY_PARAM, api_key)
         .appendQueryParameter(LANGUAGE_PARAM, language)
         .appendQueryParameter(SORT_PARAM, sortBy)
         .appendQueryParameter(ADULT_PARAM, adult)
         .appendQueryParameter(VIDEO_PARAM, video)
-        .appendQueryParameter(PAGE_PARAM, String.valueOf(page))
-        .build();
+        .appendQueryParameter(PAGE_PARAM, String.valueOf(page));
+    if (sortBy.equals(SORT_BY_RATING)) {
+      builder.appendQueryParameter(VOTE_COUNT_MIN_PARAM, vote_count_min);
+    }
     URL url = null;
     try {
-      url = new URL(uri.toString());
+      url = new URL(builder.build().toString());
     } catch (MalformedURLException e) {
       e.printStackTrace();
     }

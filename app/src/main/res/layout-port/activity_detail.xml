@@ -91,13 +91,18 @@
             android:layout_marginTop="@dimen/application_margin"
             android:text="@string/overview_label" />
 
-        <TextView
-            android:id="@+id/tv_overview"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_below="@id/tv_overview_label"
-            android:layout_marginTop="@dimen/application_spacing"
-            android:textColor="@color/colorText"
-            tools:text="Every child comes into the world full of promise, and none more so than Chappie: he is gifted, special, a prodigy. Chappie he is a robot." />
+            android:layout_marginTop="@dimen/application_spacing">
+
+            <TextView
+                android:id="@+id/tv_overview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorText"
+                tools:text="Every child comes into the world full of promise, and none more so than Chappie: he is gifted, special, a prodigy. Chappie he is a robot." />
+        </ScrollView>
     </RelativeLayout>
 </FrameLayout>

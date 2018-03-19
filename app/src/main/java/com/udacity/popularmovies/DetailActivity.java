@@ -28,7 +28,8 @@ import butterknife.ButterKnife;
 public class DetailActivity extends AppCompatActivity
     implements LoaderManager.LoaderCallbacks<Bundle> {
 
-  private static final String TAG = DetailActivity.class.getSimpleName();
+  private static final String TAG = "TAG_" + DetailActivity.class.getSimpleName();
+
   @BindView(R.id.tv_error)
   TextView errorView;
   @BindView(R.id.movie_detail_layout)
@@ -43,6 +44,7 @@ public class DetailActivity extends AppCompatActivity
   TextView voteAverageView;
   @BindView(R.id.tv_overview)
   TextView overviewView;
+
   private Movie movie;
 
   @Override

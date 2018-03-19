@@ -3,10 +3,12 @@ package com.udacity.popularmovies;
 import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,17 +29,21 @@ import butterknife.ButterKnife;
 public class MainActivity extends AppCompatActivity
     implements MoviesAdapter.MoviesOnClickHandler, LoaderManager.LoaderCallbacks<Movie[]> {
 
-  private static final String TAG = MainActivity.class.getSimpleName();
+  private static final String TAG = "TAG_" + MainActivity.class.getSimpleName();
+  private static final String SORT_ORDER_KEY = "SORT_ORDER";
 
   @BindView(R.id.rv_movies)
   RecyclerView moviesView;
   @BindView(R.id.tv_error)
   TextView errorView;
   @BindView(R.id.pb_loading)
+
   ProgressBar loadingIndicator;
   private MoviesAdapter adapter;
   private int gridColumnsNumber;
   private int gridRowHeight;
+  private String sortOrder;
+  private SharedPreferences sharedPrefs;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +51,13 @@ public class MainActivity extends AppCompatActivity
     setContentView(R.layout.activity_main);
     ButterKnife.bind(this);
 
-    // TODO Download subsequent pages and update adapter upon scrolling recycler view
+    sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+    sortOrder = sharedPrefs.getString(SORT_ORDER_KEY, HttpUtils.SORT_BY_POPULARITY);
+    if (sortOrder.equals(HttpUtils.SORT_BY_POPULARITY)) {
+      setTitle(getString(R.string.most_popular_title));
+    } else {
+      setTitle(getString(R.string.top_rated_title));
+    }
 
     initGridDimens();
     GridLayoutManager layoutManager = new GridLayoutManager(this, gridColumnsNumber);
@@ -55,6 +67,7 @@ public class MainActivity extends AppCompatActivity
 
     if (isOnline()) {
       showMovies();
+      Log.i(TAG, "Initializing loader...");
       getLoaderManager().initLoader(0, null, this);
     } else {
       showError();
@@ -63,7 +76,7 @@ public class MainActivity extends AppCompatActivity
 
   @Override
   public void onClick(Movie movie) {
-    Log.i(TAG, "Item clicked");
+    Log.i(TAG, "Item clicked: " + movie.getTitle());
     Intent intent = new Intent(this, DetailActivity.class);
     intent.putExtra(Movie.MOVIE_KEY, movie);
     startActivity(intent);
@@ -72,10 +85,12 @@ public class MainActivity extends AppCompatActivity
   // -----------------------------------------------------------------------------------------------
   // Loader
 
+  // TODO Download subsequent pages and update adapter upon scrolling recycler view
+
   @Override
   public Loader<Movie[]> onCreateLoader(int id, Bundle args) {
     loadingIndicator.setVisibility(View.VISIBLE);
-    URL url = HttpUtils.buildDiscoverQueryUrl("popularity.desc", 1);
+    URL url = HttpUtils.buildDiscoverQueryUrl(sortOrder, 1);
     return new MoviesLoader(this, url);
   }
 
@@ -85,8 +100,10 @@ public class MainActivity extends AppCompatActivity
     if (!isOnline() || data == null || data.length == 0) {
       showError();
     } else {
+      showMovies();
       adapter.setMoviesData(data);
     }
+    getLoaderManager().destroyLoader(0);  // prevent timeout if app goes offline
   }
 
   @Override
@@ -106,15 +123,23 @@ public class MainActivity extends AppCompatActivity
 
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
-    // TODO Make menu choice affect discovery URL
-    // TODO Change activity title to reflect sorting mode
-    // TODO Save options and restore on app restart
     int id = item.getItemId();
-    if (id == R.id.action_most_popular) {
-      Log.i(TAG, "Most popular sorting selected");
+    if (id == R.id.action_refresh) {
+      refresh();
+      return true;
+    } else if (id == R.id.action_most_popular) {
+      if (!sortOrder.equals(HttpUtils.SORT_BY_POPULARITY)) {
+        Log.i(TAG, "Most popular sorting selected");
+        sharedPrefs.edit().putString(SORT_ORDER_KEY, HttpUtils.SORT_BY_POPULARITY).apply();
+        reloadMovies(HttpUtils.SORT_BY_POPULARITY, R.string.most_popular_title);
+      }
       return true;
     } else if (id == R.id.action_top_rated) {
-      Log.i(TAG, "Top rated sorting selected");
+      if (!sortOrder.equals(HttpUtils.SORT_BY_RATING)) {
+        Log.i(TAG, "Top rated sorting selected");
+        sharedPrefs.edit().putString(SORT_ORDER_KEY, HttpUtils.SORT_BY_RATING).apply();
+        reloadMovies(HttpUtils.SORT_BY_RATING, R.string.top_rated_title);
+      }
       return true;
     }
     return super.onOptionsItemSelected(item);
@@ -160,5 +185,24 @@ public class MainActivity extends AppCompatActivity
   private void showError() {
     moviesView.setVisibility(View.INVISIBLE);
     errorView.setVisibility(View.VISIBLE);
+  }
+
+  /**
+   * Change title and sorting mode, then refresh
+   */
+  private void reloadMovies(String sortBy, int titleId) {
+    setTitle(getString(titleId));
+    sortOrder = sortBy;
+    refresh();
+  }
+
+  /**
+   * Refresh RecyclerView
+   */
+  private void refresh() {
+    getLoaderManager().restartLoader(0, null, this);
+    // Scroll RecyclerView to top
+    GridLayoutManager layoutManager = (GridLayoutManager) moviesView.getLayoutManager();
+    layoutManager.scrollToPositionWithOffset(0, 0);
   }
 }
