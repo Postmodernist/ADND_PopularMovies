@@ -105,6 +105,29 @@ public final class JsonUtils {
     return movieDetail;
   }
 
+  /**
+   * Return total pages value from jsonStr
+   */
+  public static int getTotalPages(String jsonStr) throws JSONException {
+    if (TextUtils.isEmpty(jsonStr)) {
+      Log.e(TAG, "Empty JSON string");
+      return 0;
+    }
+
+    final String TOTAL_PAGES = "total_pages";
+    final String STATUS_MESSAGE = "status_message";
+
+    JSONObject root = new JSONObject(jsonStr);
+    if (root.has(STATUS_MESSAGE)) {
+      String statusMessage = root.getString(STATUS_MESSAGE);
+      Log.e(TAG, "Status message: " + statusMessage);
+      return 0;
+    }
+
+    int totalPages = getInt(root, TOTAL_PAGES);
+    return totalPages != Integer.MIN_VALUE ? totalPages : 0;
+  }
+
   // -----------------------------------------------------------------------------------------------
   // Helpers
 

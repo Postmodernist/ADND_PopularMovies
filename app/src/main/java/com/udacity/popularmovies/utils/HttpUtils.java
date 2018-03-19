@@ -121,7 +121,6 @@ public final class HttpUtils {
     } catch (MalformedURLException e) {
       e.printStackTrace();
     }
-    Log.i(TAG, "Poster URI: " + url);
     return url;
   }
 

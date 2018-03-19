@@ -10,6 +10,7 @@ import android.os.Parcelable;
 public class Movie implements Parcelable {
 
   public static final String MOVIE_KEY = "MOVIE";
+  public static final String TOTAL_PAGES_KEY = "TOTAL_PAGES";
   public static final String RUNTIME_KEY = "RUNTIME";
   public static final Creator<Movie> CREATOR = new Creator<Movie>() {
     @Override

@@ -27,23 +27,27 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
-    implements MoviesAdapter.MoviesOnClickHandler, LoaderManager.LoaderCallbacks<Movie[]> {
+    implements MoviesAdapter.MoviesOnClickHandler, LoaderManager.LoaderCallbacks<Bundle> {
 
   private static final String TAG = "TAG_" + MainActivity.class.getSimpleName();
   private static final String SORT_ORDER_KEY = "SORT_ORDER";
+  private static final int STARTING_PAGE = 1;
 
   @BindView(R.id.rv_movies)
   RecyclerView moviesView;
   @BindView(R.id.tv_error)
   TextView errorView;
   @BindView(R.id.pb_loading)
-
   ProgressBar loadingIndicator;
+
   private MoviesAdapter adapter;
-  private int gridColumnsNumber;
-  private int gridRowHeight;
+  private EndlessRecyclerViewScrollListener scrollListener;
   private String sortOrder;
   private SharedPreferences sharedPrefs;
+  private int gridColumnsNumber;
+  private int gridRowHeight;
+  private int page = STARTING_PAGE;
+  private int totalPages = 0;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +55,7 @@ public class MainActivity extends AppCompatActivity
     setContentView(R.layout.activity_main);
     ButterKnife.bind(this);
 
+    // Load sorting preferences
     sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
     sortOrder = sharedPrefs.getString(SORT_ORDER_KEY, HttpUtils.SORT_BY_POPULARITY);
     if (sortOrder.equals(HttpUtils.SORT_BY_POPULARITY)) {
@@ -59,15 +64,27 @@ public class MainActivity extends AppCompatActivity
       setTitle(getString(R.string.top_rated_title));
     }
 
+    // Setup RecyclerView
     initGridDimens();
     GridLayoutManager layoutManager = new GridLayoutManager(this, gridColumnsNumber);
     moviesView.setLayoutManager(layoutManager);
     adapter = new MoviesAdapter(this, gridRowHeight);
     moviesView.setAdapter(adapter);
+    scrollListener = new EndlessRecyclerViewScrollListener(layoutManager, STARTING_PAGE) {
+      @Override
+      public void onLoadMore(int page) {
+        if (totalPages > 0 && page > totalPages) {
+          return;
+        }
+        MainActivity.this.page = page;
+        getLoaderManager().restartLoader(0, null, MainActivity.this);
+      }
+    };
+    moviesView.addOnScrollListener(scrollListener);
 
+    // Download movies data
     if (isOnline()) {
       showMovies();
-      Log.i(TAG, "Initializing loader...");
       getLoaderManager().initLoader(0, null, this);
     } else {
       showError();
@@ -85,31 +102,35 @@ public class MainActivity extends AppCompatActivity
   // -----------------------------------------------------------------------------------------------
   // Loader
 
-  // TODO Download subsequent pages and update adapter upon scrolling recycler view
-
   @Override
-  public Loader<Movie[]> onCreateLoader(int id, Bundle args) {
-    loadingIndicator.setVisibility(View.VISIBLE);
-    URL url = HttpUtils.buildDiscoverQueryUrl(sortOrder, 1);
+  public Loader<Bundle> onCreateLoader(int id, Bundle args) {
+    Log.i(TAG, "Loading page " + page + "...");
+    if (page == STARTING_PAGE) {
+      // Only show progress bar when loading the first page
+      loadingIndicator.setVisibility(View.VISIBLE);
+    }
+    URL url = HttpUtils.buildDiscoverQueryUrl(sortOrder, page);
     return new MoviesLoader(this, url);
   }
 
   @Override
-  public void onLoadFinished(Loader<Movie[]> loader, Movie[] data) {
+  public void onLoadFinished(Loader<Bundle> loader, Bundle data) {
     loadingIndicator.setVisibility(View.INVISIBLE);
-    if (!isOnline() || data == null || data.length == 0) {
+    totalPages = data.getInt(Movie.TOTAL_PAGES_KEY);
+    Movie[] movies = (Movie[]) data.getParcelableArray(Movie.MOVIE_KEY);
+    if (!isOnline() || movies == null || movies.length == 0) {
       showError();
     } else {
       showMovies();
-      adapter.setMoviesData(data);
+      adapter.appendMoviesData(movies);
     }
     getLoaderManager().destroyLoader(0);  // prevent timeout if app goes offline
   }
 
   @Override
-  public void onLoaderReset(Loader<Movie[]> loader) {
+  public void onLoaderReset(Loader<Bundle> loader) {
     loadingIndicator.setVisibility(View.INVISIBLE);
-    adapter.setMoviesData(null);
+    resetMoviesView();
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -125,7 +146,7 @@ public class MainActivity extends AppCompatActivity
   public boolean onOptionsItemSelected(MenuItem item) {
     int id = item.getItemId();
     if (id == R.id.action_refresh) {
-      refresh();
+      refreshMoviesView();
       return true;
     } else if (id == R.id.action_most_popular) {
       if (!sortOrder.equals(HttpUtils.SORT_BY_POPULARITY)) {
@@ -188,21 +209,32 @@ public class MainActivity extends AppCompatActivity
   }
 
   /**
-   * Change title and sorting mode, then refresh
+   * Change title and sorting mode, then refreshMoviesView
    */
   private void reloadMovies(String sortBy, int titleId) {
     setTitle(getString(titleId));
     sortOrder = sortBy;
-    refresh();
+    refreshMoviesView();
   }
 
   /**
    * Refresh RecyclerView
    */
-  private void refresh() {
+  private void refreshMoviesView() {
+    resetMoviesView();
+    // Restart loader
     getLoaderManager().restartLoader(0, null, this);
     // Scroll RecyclerView to top
     GridLayoutManager layoutManager = (GridLayoutManager) moviesView.getLayoutManager();
     layoutManager.scrollToPositionWithOffset(0, 0);
+  }
+
+  /**
+   * Reset RecyclerView state
+   */
+  private void resetMoviesView() {
+    adapter.resetMoviesData();
+    scrollListener.resetState();
+    page = STARTING_PAGE;
   }
 }

@@ -89,8 +89,10 @@ public class DetailActivity extends AppCompatActivity
     // Set extra movie details
     if (data.containsKey(Movie.RUNTIME_KEY)) {
       int runtime = data.getInt(Movie.RUNTIME_KEY);
-      Log.i(TAG, "Runtime: " + runtime);
-      movie.setRuntime(runtime);
+      if (runtime != Integer.MIN_VALUE) {
+        Log.i(TAG, "Runtime: " + runtime);
+        movie.setRuntime(runtime);
+      }
     } else {
       Log.e(TAG, "Key not found: " + Movie.RUNTIME_KEY);
     }

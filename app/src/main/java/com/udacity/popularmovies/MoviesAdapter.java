@@ -54,8 +54,23 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
   /**
    * Set movies data and refresh adapter
    */
-  public void setMoviesData(Movie[] moviesData) {
-    this.moviesData = moviesData;
+  public void resetMoviesData() {
+    this.moviesData = null;
+    notifyDataSetChanged();
+  }
+
+  /**
+   * Append new movies data and refresh adapter
+   */
+  public void appendMoviesData(Movie[] newMoviesData) {
+    if (moviesData == null) {
+      moviesData = newMoviesData;
+    } else {
+      Movie[] tmp = new Movie[moviesData.length + newMoviesData.length];
+      System.arraycopy(moviesData, 0, tmp, 0, moviesData.length);
+      System.arraycopy(newMoviesData, 0, tmp, moviesData.length, newMoviesData.length);
+      moviesData = tmp;
+    }
     notifyDataSetChanged();
   }
 
