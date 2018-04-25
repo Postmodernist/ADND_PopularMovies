@@ -32,7 +32,7 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
    */
   private boolean loading = true;
 
-  public EndlessRecyclerViewScrollListener(GridLayoutManager layoutManager, int startingPage) {
+  EndlessRecyclerViewScrollListener(GridLayoutManager layoutManager, int startingPage) {
     this.layoutManager = layoutManager;
     this.startingPage = startingPage;
     remainingItemsThreshold *= layoutManager.getSpanCount();
