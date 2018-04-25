@@ -2,40 +2,35 @@
  * Original solution:
  * https://gist.github.com/nesquena/d09dc68ff07e845cc622
  */
-
-package com.udacity.popularmovies;
+package com.udacity.popularmovies.utils;
 
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
 public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnScrollListener {
 
+  // The minimum amount of items to have below current scroll position before loading more
+  private static final int REMAINING_ROWS_THRESHOLD = 5;
+  private int remainingItemsThreshold;
+
   private GridLayoutManager layoutManager;
-  /**
-   * Sets the starting page index
-   */
+
+  // Sets the starting page index
   private int startingPage;
-  /**
-   * The minimum amount of items to have below current scroll position before loading more
-   */
-  private int remainingItemsThreshold = 5;
-  /**
-   * The current offset index of loaded data
-   */
+
+  // The current offset index of loaded data
   private int page = 1;
-  /**
-   * The total number of items in the data set after the last load
-   */
+
+  // The total number of items in the data set after the last load
   private int previousTotalItemCount = 0;
-  /**
-   * True if we are still waiting for the last set of data to load
-   */
+
+  // True if we are still waiting for the last set of data to load
   private boolean loading = true;
 
-  EndlessRecyclerViewScrollListener(GridLayoutManager layoutManager, int startingPage) {
+  protected EndlessRecyclerViewScrollListener(GridLayoutManager layoutManager, int startingPage) {
     this.layoutManager = layoutManager;
     this.startingPage = startingPage;
-    remainingItemsThreshold *= layoutManager.getSpanCount();
+    remainingItemsThreshold = REMAINING_ROWS_THRESHOLD * layoutManager.getSpanCount();
   }
 
   @Override
@@ -56,8 +51,8 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
     // If it’s still loading, we check to see if the data set count has changed,
     // if so we conclude it has finished loading and update total item count.
     if (loading && (totalItemCount > previousTotalItemCount)) {
-      loading = false;
       previousTotalItemCount = totalItemCount;
+      loading = false;
     }
 
     // If it isn’t currently loading, we check to see if we have breached

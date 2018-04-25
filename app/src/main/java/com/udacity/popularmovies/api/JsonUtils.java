@@ -1,11 +1,11 @@
-package com.udacity.popularmovies.utils;
+package com.udacity.popularmovies.api;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.udacity.popularmovies.Movie;
+import com.udacity.popularmovies.database.entity.Movie;
 
 import org.json.JSONArray;
 import org.json.JSONException;

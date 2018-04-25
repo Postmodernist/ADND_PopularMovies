@@ -1,4 +1,4 @@
-package com.udacity.popularmovies;
+package com.udacity.popularmovies.adapters;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
+import com.udacity.popularmovies.R;
+import com.udacity.popularmovies.database.entity.Movie;
 
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewHolder> {
 
@@ -22,7 +24,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
    * @param clickHandler The on-click handler for this adapter.
    * @param itemHeight   The height of the items inflated by the adapter.
    */
-  MoviesAdapter(MoviesOnClickHandler clickHandler, int itemHeight) {
+  public MoviesAdapter(MoviesOnClickHandler clickHandler, int itemHeight) {
     this.clickHandler = clickHandler;
     itemLayoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, itemHeight);
   }

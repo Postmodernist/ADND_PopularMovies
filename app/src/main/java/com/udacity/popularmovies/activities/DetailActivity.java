@@ -1,4 +1,4 @@
-package com.udacity.popularmovies;
+package com.udacity.popularmovies.activities;
 
 import android.app.LoaderManager;
 import android.content.Intent;
@@ -18,7 +18,10 @@ import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
-import com.udacity.popularmovies.utils.HttpUtils;
+import com.udacity.popularmovies.R;
+import com.udacity.popularmovies.api.HttpUtils;
+import com.udacity.popularmovies.database.entity.Movie;
+import com.udacity.popularmovies.loaders.DetailLoader;
 
 import java.net.URL;
 

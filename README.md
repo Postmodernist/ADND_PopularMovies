@@ -1,2 +1,2 @@
-# Popular Movies (Stage 1)
+# Popular Movies (Stage 2)
 Project from <b>Android Developer Nanodegree</b>

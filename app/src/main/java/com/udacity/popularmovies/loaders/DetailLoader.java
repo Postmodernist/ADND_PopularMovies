@@ -1,11 +1,11 @@
-package com.udacity.popularmovies;
+package com.udacity.popularmovies.loaders;
 
 import android.content.AsyncTaskLoader;
 import android.content.Context;
 import android.os.Bundle;
 
-import com.udacity.popularmovies.utils.HttpUtils;
-import com.udacity.popularmovies.utils.JsonUtils;
+import com.udacity.popularmovies.api.HttpUtils;
+import com.udacity.popularmovies.api.JsonUtils;
 
 import org.json.JSONException;
 
@@ -16,7 +16,7 @@ public class DetailLoader extends AsyncTaskLoader<Bundle> {
 
   private final URL url;
 
-  DetailLoader(Context context, URL url) {
+  public DetailLoader(Context context, URL url) {
     super(context);
     this.url = url;
   }

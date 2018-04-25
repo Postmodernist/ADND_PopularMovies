@@ -1,4 +1,4 @@
-package com.udacity.popularmovies;
+package com.udacity.popularmovies.activities;
 
 import android.app.LoaderManager;
 import android.content.Intent;
@@ -19,7 +19,12 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.udacity.popularmovies.utils.HttpUtils;
+import com.udacity.popularmovies.R;
+import com.udacity.popularmovies.utils.EndlessRecyclerViewScrollListener;
+import com.udacity.popularmovies.database.entity.Movie;
+import com.udacity.popularmovies.adapters.MoviesAdapter;
+import com.udacity.popularmovies.loaders.MoviesLoader;
+import com.udacity.popularmovies.api.HttpUtils;
 
 import java.net.URL;
 
@@ -73,6 +78,7 @@ public class MainActivity extends AppCompatActivity
     scrollListener = new EndlessRecyclerViewScrollListener(layoutManager, STARTING_PAGE) {
       @Override
       public void onLoadMore(int page) {
+        // Do nothing if we're offline or no more pages to load
         if (!isOnline() || (totalPages > 0 && page > totalPages)) {
           return;
         }

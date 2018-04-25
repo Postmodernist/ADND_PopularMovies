@@ -1,4 +1,4 @@
-package com.udacity.popularmovies.utils;
+package com.udacity.popularmovies.api;
 
 
 import android.net.Uri;
