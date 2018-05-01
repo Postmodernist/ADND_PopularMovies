@@ -1,8 +1,7 @@
 package com.udacity.popularmovies.activities;
 
-import android.app.LoaderManager;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
-import android.content.Loader;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
@@ -20,39 +19,40 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.udacity.popularmovies.R;
-import com.udacity.popularmovies.utils.EndlessRecyclerViewScrollListener;
-import com.udacity.popularmovies.database.entity.Movie;
 import com.udacity.popularmovies.adapters.MoviesAdapter;
-import com.udacity.popularmovies.loaders.MoviesLoader;
+import com.udacity.popularmovies.api.DiscoverApi;
 import com.udacity.popularmovies.api.HttpUtils;
+import com.udacity.popularmovies.database.entity.Movie;
+import com.udacity.popularmovies.model.discover.Result;
+import com.udacity.popularmovies.repositories.MoviesRepository;
+import com.udacity.popularmovies.utils.EndlessRecyclerViewScrollListener;
+import com.udacity.popularmovies.viewmodels.MoviesViewModel;
+import com.udacity.popularmovies.viewmodels.MoviesViewModelFactory;
 
-import java.net.URL;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity
-    implements MoviesAdapter.MoviesOnClickHandler, LoaderManager.LoaderCallbacks<Bundle> {
+public class MainActivity extends AppCompatActivity implements MoviesAdapter.MoviesOnClickHandler {
 
   private static final String TAG = "TAG_" + MainActivity.class.getSimpleName();
-  private static final String SORT_ORDER_KEY = "SORT_ORDER";
-  private static final int STARTING_PAGE = 1;
 
   @BindView(R.id.rv_movies)
   RecyclerView moviesView;
   @BindView(R.id.tv_error)
   TextView errorView;
   @BindView(R.id.pb_loading)
-  ProgressBar loadingIndicator;
+  ProgressBar progressBar;
 
   private MoviesAdapter adapter;
+  private MoviesViewModel viewModel;
   private EndlessRecyclerViewScrollListener scrollListener;
-  private String sortOrder;
-  private SharedPreferences sharedPrefs;
   private int gridColumnsNumber;
   private int gridRowHeight;
-  private int page = STARTING_PAGE;
-  private int totalPages = 0;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -60,83 +60,56 @@ public class MainActivity extends AppCompatActivity
     setContentView(R.layout.activity_main);
     ButterKnife.bind(this);
 
-    // Load sorting preferences
-    sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-    sortOrder = sharedPrefs.getString(SORT_ORDER_KEY, HttpUtils.SORT_BY_POPULARITY);
-    if (sortOrder.equals(HttpUtils.SORT_BY_POPULARITY)) {
+    // Setup RecyclerView
+    initGridDimens();
+    GridLayoutManager layoutManager = new GridLayoutManager(this, gridColumnsNumber);
+    adapter = new MoviesAdapter(this, gridRowHeight);
+    scrollListener = new EndlessRecyclerViewScrollListener(layoutManager) {
+      @Override
+      public void onLoadMore() {
+        if (isOnline()) {
+          Log.i(TAG, "Requesting more data...");
+          viewModel.loadMore();
+        }
+      }
+    };
+    moviesView.setLayoutManager(layoutManager);
+    moviesView.setAdapter(adapter);
+    moviesView.addOnScrollListener(scrollListener);
+
+    // Setup ViewModel
+    MoviesRepository repository = MoviesRepository.getInstance();
+    if (repository == null) {
+      Retrofit retrofit = new Retrofit.Builder()
+          .baseUrl(HttpUtils.BASE_URL)
+          .addConverterFactory(GsonConverterFactory.create())
+          .build();
+      DiscoverApi discoverApi = retrofit.create(DiscoverApi.class);
+      Executor executor = Executors.newSingleThreadExecutor();
+      SharedPreferences sharedPreferences =
+          PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+      repository = new MoviesRepository(discoverApi, executor, sharedPreferences);
+    }
+    viewModel = ViewModelProviders.of(this, new MoviesViewModelFactory(repository))
+        .get(MoviesViewModel.class);
+    viewModel.init();
+    viewModel.getMoviesList().observe(this, moviesList -> adapter.setMoviesData(moviesList));
+    viewModel.getLoading().observe(this, this::updateLoadingIndicator);
+
+    // Change title according to sort order
+    if (viewModel.getSortBy().equals(HttpUtils.SORT_BY_POPULARITY)) {
       setTitle(getString(R.string.most_popular_title));
     } else {
       setTitle(getString(R.string.top_rated_title));
     }
-
-    // Setup RecyclerView
-    initGridDimens();
-    GridLayoutManager layoutManager = new GridLayoutManager(this, gridColumnsNumber);
-    moviesView.setLayoutManager(layoutManager);
-    adapter = new MoviesAdapter(this, gridRowHeight);
-    moviesView.setAdapter(adapter);
-    scrollListener = new EndlessRecyclerViewScrollListener(layoutManager, STARTING_PAGE) {
-      @Override
-      public void onLoadMore(int page) {
-        // Do nothing if we're offline or no more pages to load
-        if (!isOnline() || (totalPages > 0 && page > totalPages)) {
-          return;
-        }
-        MainActivity.this.page = page;
-        getLoaderManager().restartLoader(0, null, MainActivity.this);
-      }
-    };
-    moviesView.addOnScrollListener(scrollListener);
-
-    // Download movies data
-    if (isOnline()) {
-      showMovies();
-      getLoaderManager().initLoader(0, null, this);
-    } else {
-      showError();
-    }
   }
 
   @Override
-  public void onClick(Movie movie) {
+  public void onClick(Result movie) {
     Log.i(TAG, "Item clicked: " + movie.getTitle());
     Intent intent = new Intent(this, DetailActivity.class);
     intent.putExtra(Movie.MOVIE_KEY, movie);
     startActivity(intent);
-  }
-
-  // -----------------------------------------------------------------------------------------------
-  // Loader
-
-  @Override
-  public Loader<Bundle> onCreateLoader(int id, Bundle args) {
-    Log.i(TAG, "Loading page " + page + "...");
-    if (page == STARTING_PAGE) {
-      // Only show progress bar when loading the first page
-      loadingIndicator.setVisibility(View.VISIBLE);
-    }
-    URL url = HttpUtils.buildDiscoverQueryUrl(sortOrder, page);
-    return new MoviesLoader(this, url);
-  }
-
-  @Override
-  public void onLoadFinished(Loader<Bundle> loader, Bundle data) {
-    loadingIndicator.setVisibility(View.INVISIBLE);
-    totalPages = data.getInt(Movie.TOTAL_PAGES_KEY);
-    Movie[] movies = (Movie[]) data.getParcelableArray(Movie.MOVIE_KEY);
-    if (!isOnline() || movies == null || movies.length == 0) {
-      showError();
-    } else {
-      showMovies();
-      adapter.appendMoviesData(movies);
-    }
-    getLoaderManager().destroyLoader(0);  // prevent timeout if app goes offline
-  }
-
-  @Override
-  public void onLoaderReset(Loader<Bundle> loader) {
-    loadingIndicator.setVisibility(View.INVISIBLE);
-    resetMoviesView();
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -152,28 +125,21 @@ public class MainActivity extends AppCompatActivity
   public boolean onOptionsItemSelected(MenuItem item) {
     int id = item.getItemId();
     if (id == R.id.action_refresh) {
-      refreshMoviesView();
+      refreshData();
       return true;
     } else if (id == R.id.action_most_popular) {
-      if (!sortOrder.equals(HttpUtils.SORT_BY_POPULARITY)) {
-        Log.i(TAG, "Most popular sorting selected");
-        sharedPrefs.edit().putString(SORT_ORDER_KEY, HttpUtils.SORT_BY_POPULARITY).apply();
-        reloadMovies(HttpUtils.SORT_BY_POPULARITY, R.string.most_popular_title);
-      }
+      Log.i(TAG, "Most popular sorting selected");
+      changeSortOrder(HttpUtils.SORT_BY_POPULARITY, R.string.most_popular_title);
       return true;
     } else if (id == R.id.action_top_rated) {
-      if (!sortOrder.equals(HttpUtils.SORT_BY_RATING)) {
-        Log.i(TAG, "Top rated sorting selected");
-        sharedPrefs.edit().putString(SORT_ORDER_KEY, HttpUtils.SORT_BY_RATING).apply();
-        reloadMovies(HttpUtils.SORT_BY_RATING, R.string.top_rated_title);
-      }
+      Log.i(TAG, "Top rated sorting selected");
+      changeSortOrder(HttpUtils.SORT_BY_RATING, R.string.top_rated_title);
       return true;
     }
     return super.onOptionsItemSelected(item);
   }
 
   // -----------------------------------------------------------------------------------------------
-  // Utils
 
   /**
    * Initialize the number of columns and row height of in RecyclerView grid
@@ -199,49 +165,54 @@ public class MainActivity extends AppCompatActivity
   }
 
   /**
-   * Show movies grid
+   * Change title and sorting mode, then refreshData
    */
-  private void showMovies() {
-    moviesView.setVisibility(View.VISIBLE);
-    errorView.setVisibility(View.INVISIBLE);
-  }
-
-  /**
-   * Show error message
-   */
-  private void showError() {
-    moviesView.setVisibility(View.INVISIBLE);
-    errorView.setVisibility(View.VISIBLE);
-  }
-
-  /**
-   * Change title and sorting mode, then refreshMoviesView
-   */
-  private void reloadMovies(String sortBy, int titleId) {
+  private void changeSortOrder(String sortBy, int titleId) {
     setTitle(getString(titleId));
-    sortOrder = sortBy;
-    refreshMoviesView();
+    viewModel.setSortBy(sortBy);
   }
 
   /**
-   * Refresh RecyclerView
+   * Refresh movies data
    */
-  private void refreshMoviesView() {
-    resetMoviesView();
-    // Restart loader
-    getLoaderManager().restartLoader(0, null, this);
+  private void refreshData() {
     // Scroll RecyclerView to top
     GridLayoutManager layoutManager = (GridLayoutManager) moviesView.getLayoutManager();
     layoutManager.scrollToPositionWithOffset(0, 0);
+    // Reset adapter
+    adapter.setMoviesData(null);
+    scrollListener.resetState();
+    // Refresh data
+    viewModel.refresh();
   }
 
   /**
-   * Reset RecyclerView state
+   * Update UI elements visibility
    */
-  private void resetMoviesView() {
-    adapter.resetMoviesData();
-    scrollListener.resetState();
-    page = STARTING_PAGE;
-    showMovies();
+  private void updateLoadingIndicator(Boolean loading) {
+    if (!loading && adapter.getItemCount() == 0) {
+      // Finished loading but nothing to show
+      progressBar.setVisibility(View.INVISIBLE);
+      errorView.setVisibility(View.VISIBLE);
+      moviesView.setVisibility(View.INVISIBLE);
+
+    } else if (!loading && adapter.getItemCount() != 0) {
+      // Finished loading successfully
+      progressBar.setVisibility(View.INVISIBLE);
+      errorView.setVisibility(View.INVISIBLE);
+      moviesView.setVisibility(View.VISIBLE);
+
+    } else if (loading && adapter.getItemCount() == 0) {
+      // Started loading but nothing to show
+      progressBar.setVisibility(View.VISIBLE);
+      errorView.setVisibility(View.INVISIBLE);
+      moviesView.setVisibility(View.INVISIBLE);
+
+    } else if (loading && adapter.getItemCount() != 0) {
+      // Started loading while showing data
+      progressBar.setVisibility(View.INVISIBLE);
+      errorView.setVisibility(View.INVISIBLE);
+      moviesView.setVisibility(View.VISIBLE);
+    }
   }
 }

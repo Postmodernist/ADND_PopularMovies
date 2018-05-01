@@ -68,7 +68,7 @@ public final class JsonUtils {
       String title = getString(jMovie, TITLE);
       tmp = getString(jMovie, POSTER_PATH);
       String posterUrl = !TextUtils.isEmpty(tmp) && !tmp.equals("null") ?
-          HttpUtils.buildPosterUrl(tmp).toString() : IMAGE_PLACEHOLDER;
+          HttpUtils.posterUrl(tmp) : IMAGE_PLACEHOLDER;
       String overview = getString(jMovie, OVERVIEW);
       double voteAverage = getDouble(jMovie, VOTE_AVERAGE);
       int releaseDate = extractYear(getString(jMovie, RELEASE_DATE));

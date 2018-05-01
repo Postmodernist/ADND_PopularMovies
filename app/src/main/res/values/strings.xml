@@ -1,4 +1,5 @@
 <resources>
+
     <string name="app_name">Popular Movies</string>
     <string name="most_popular_title">Popular Movies</string>
     <string name="top_rated_title">Top Rated Movies</string>
@@ -15,4 +16,5 @@
     <string name="runtime_text">%d min</string>
     <string name="vote_average_text">%.1f/10</string>
     <string name="not_available">N/A</string>
+
 </resources>

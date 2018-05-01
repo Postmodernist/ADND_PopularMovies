@@ -10,11 +10,17 @@ import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 import com.udacity.popularmovies.R;
-import com.udacity.popularmovies.database.entity.Movie;
+import com.udacity.popularmovies.api.HttpUtils;
+import com.udacity.popularmovies.model.discover.Result;
+
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewHolder> {
 
-  private Movie[] moviesData;
+  private List<Result> moviesData;
   private MoviesOnClickHandler clickHandler;
   private ViewGroup.LayoutParams itemLayoutParams;
 
@@ -42,7 +48,9 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
   @Override
   public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
     ImageView posterView = holder.getPosterView();
-    Picasso.get().load(moviesData[position].getPosterUrl()).into(posterView);
+    String posterPath = moviesData.get(position).getPosterPath();
+    String posterUrl = HttpUtils.posterUrl(posterPath);
+    Picasso.get().load(posterUrl).into(posterView);
   }
 
   @Override
@@ -50,29 +58,11 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
     if (moviesData == null) {
       return 0;
     }
-    return moviesData.length;
+    return moviesData.size();
   }
 
-  /**
-   * Set movies data and refresh adapter
-   */
-  public void resetMoviesData() {
-    this.moviesData = null;
-    notifyDataSetChanged();
-  }
-
-  /**
-   * Append new movies data and refresh adapter
-   */
-  public void appendMoviesData(Movie[] newMoviesData) {
-    if (moviesData == null) {
-      moviesData = newMoviesData;
-    } else {
-      Movie[] tmp = new Movie[moviesData.length + newMoviesData.length];
-      System.arraycopy(moviesData, 0, tmp, 0, moviesData.length);
-      System.arraycopy(newMoviesData, 0, tmp, moviesData.length, newMoviesData.length);
-      moviesData = tmp;
-    }
+  public void setMoviesData(List<Result> moviesData) {
+    this.moviesData = moviesData;
     notifyDataSetChanged();
   }
 
@@ -80,7 +70,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
    * The interface that receives onClick messages
    */
   public interface MoviesOnClickHandler {
-    void onClick(Movie movie);
+    void onClick(Result movie);
   }
 
   /**
@@ -88,17 +78,18 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
    */
   class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-    private final ImageView posterView;
+    @BindView(R.id.iv_poster)
+    ImageView posterView;
 
     MovieViewHolder(View itemView) {
       super(itemView);
-      posterView = itemView.findViewById(R.id.iv_poster);
+      ButterKnife.bind(this, itemView);
       itemView.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
-      clickHandler.onClick(moviesData[getAdapterPosition()]);
+      clickHandler.onClick(moviesData.get(getAdapterPosition()));
     }
 
     ImageView getPosterView() {

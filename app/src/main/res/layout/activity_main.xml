@@ -2,13 +2,13 @@
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rv_movies"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/colorPrimary" />
+        android:layout_height="match_parent" />
 
     <TextView
         android:id="@+id/tv_error"
@@ -17,6 +17,7 @@
         android:layout_margin="@dimen/application_margin"
         android:gravity="center_horizontal"
         android:text="@string/no_connection"
+        android:textColor="@color/colorText"
         android:textSize="@dimen/error_text_size"
         android:visibility="invisible" />
 
