@@ -10,15 +10,17 @@ import com.udacity.popularmovies.repositories.MoviesRepository;
 public class MoviesViewModelFactory extends ViewModelProvider.NewInstanceFactory {
 
   private MoviesRepository moviesRepository;
+  private SharedPreferences sharedPrefs;
 
-  public MoviesViewModelFactory(MoviesRepository moviesRepository) {
+  public MoviesViewModelFactory(MoviesRepository moviesRepository, SharedPreferences sharedPrefs) {
     this.moviesRepository = moviesRepository;
+    this.sharedPrefs = sharedPrefs;
   }
 
   @SuppressWarnings("unchecked")
   @NonNull
   @Override
   public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-    return (T) new MoviesViewModel(moviesRepository);
+    return (T) new MoviesViewModel(moviesRepository, sharedPrefs);
   }
 }

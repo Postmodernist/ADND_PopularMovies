@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
       @Override
       public void onLoadMore() {
         if (isOnline()) {
-          Log.i(TAG, "Requesting more data...");
+          Log.d(TAG, "Requesting more data...");
           viewModel.loadMore();
         }
       }
@@ -86,15 +86,15 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
           .build();
       DiscoverApi discoverApi = retrofit.create(DiscoverApi.class);
       Executor executor = Executors.newSingleThreadExecutor();
-      SharedPreferences sharedPreferences =
-          PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-      repository = new MoviesRepository(discoverApi, executor, sharedPreferences);
+      repository = new MoviesRepository(discoverApi, executor);
     }
-    viewModel = ViewModelProviders.of(this, new MoviesViewModelFactory(repository))
+    SharedPreferences sharedPrefs =
+        PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    viewModel = ViewModelProviders.of(this, new MoviesViewModelFactory(repository, sharedPrefs))
         .get(MoviesViewModel.class);
     viewModel.init();
-    viewModel.getMoviesList().observe(this, moviesList -> adapter.setMoviesData(moviesList));
-    viewModel.getLoading().observe(this, this::updateLoadingIndicator);
+    viewModel.getMoviesList().observe(this, moviesList -> adapter.submitList(moviesList));
+    viewModel.getLoadingStatus().observe(this, this::updateViewsVisibility);
 
     // Change title according to sort order
     if (viewModel.getSortBy().equals(HttpUtils.SORT_BY_POPULARITY)) {
@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
 
   @Override
   public void onClick(Result movie) {
-    Log.i(TAG, "Item clicked: " + movie.getTitle());
+    Log.d(TAG, "Item clicked: " + movie.getTitle());
     Intent intent = new Intent(this, DetailActivity.class);
     intent.putExtra(Movie.MOVIE_KEY, movie);
     startActivity(intent);
@@ -125,14 +125,15 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
   public boolean onOptionsItemSelected(MenuItem item) {
     int id = item.getItemId();
     if (id == R.id.action_refresh) {
-      refreshData();
+      viewModel.refresh();
+      refreshUi();
       return true;
     } else if (id == R.id.action_most_popular) {
-      Log.i(TAG, "Most popular sorting selected");
+      Log.d(TAG, "Most popular sorting selected");
       changeSortOrder(HttpUtils.SORT_BY_POPULARITY, R.string.most_popular_title);
       return true;
     } else if (id == R.id.action_top_rated) {
-      Log.i(TAG, "Top rated sorting selected");
+      Log.d(TAG, "Top rated sorting selected");
       changeSortOrder(HttpUtils.SORT_BY_RATING, R.string.top_rated_title);
       return true;
     }
@@ -165,31 +166,30 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
   }
 
   /**
-   * Change title and sorting mode, then refreshData
+   * Change movies sorting order
    */
   private void changeSortOrder(String sortBy, int titleId) {
-    setTitle(getString(titleId));
     viewModel.setSortBy(sortBy);
+    setTitle(getString(titleId));
+    refreshUi();
   }
 
   /**
-   * Refresh movies data
+   * Refresh UI
    */
-  private void refreshData() {
+  private void refreshUi() {
     // Scroll RecyclerView to top
     GridLayoutManager layoutManager = (GridLayoutManager) moviesView.getLayoutManager();
     layoutManager.scrollToPositionWithOffset(0, 0);
     // Reset adapter
-    adapter.setMoviesData(null);
+    adapter.submitList(null);
     scrollListener.resetState();
-    // Refresh data
-    viewModel.refresh();
   }
 
   /**
    * Update UI elements visibility
    */
-  private void updateLoadingIndicator(Boolean loading) {
+  private void updateViewsVisibility(Boolean loading) {
     if (!loading && adapter.getItemCount() == 0) {
       // Finished loading but nothing to show
       progressBar.setVisibility(View.INVISIBLE);

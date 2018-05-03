@@ -2,9 +2,7 @@ package com.udacity.popularmovies.repositories;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
-import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.udacity.popularmovies.api.DiscoverApi;
@@ -22,31 +20,18 @@ import retrofit2.Response;
 public class MoviesRepository {
 
   private static final String TAG = "TAG_" + MoviesRepository.class.getSimpleName();
-  private static final String SORT_ORDER_KEY = "SORT_ORDER";
-  private static final int STARTING_PAGE = 1;
-
   private static MoviesRepository INSTANCE;
 
   private DiscoverApi discoverApi;
   private Executor executor;
-  private SharedPreferences sharedPrefs;
-  private String sortBy;
-  private int page;
-
-  // List of movies to be displayed in discovery activity
-  private MutableLiveData<List<Result>> moviesList = new MutableLiveData<>();
-
-  // Loading status indicator
-  private MutableLiveData<Boolean> loading = new MutableLiveData<>();
+  private MutableLiveData<List<Result>> liveMoviesPage = new MutableLiveData<>();
+  private MutableLiveData<Boolean> liveLoadingStatus = new MutableLiveData<>();
 
 
-  public MoviesRepository(DiscoverApi discoverApi, Executor executor, SharedPreferences sharedPrefs) {
+  public MoviesRepository(DiscoverApi discoverApi, Executor executor) {
     this.discoverApi = discoverApi;
     this.executor = executor;
-    this.sharedPrefs = sharedPrefs;
-    sortBy = sharedPrefs.getString(SORT_ORDER_KEY, HttpUtils.SORT_BY_POPULARITY);
-    page = STARTING_PAGE;
-    loading.setValue(false);
+    liveLoadingStatus.setValue(false);
     INSTANCE = this;
   }
 
@@ -54,88 +39,54 @@ public class MoviesRepository {
     return INSTANCE;
   }
 
-  /**
-   * Load everything from scratch
-   */
-  public void refresh() {
-    moviesList.setValue(null);
-    page = STARTING_PAGE;
-    loadMore();
-  }
+  // -----------------------------------------------------------------------------------------------
+  // Movies list
 
   /**
-   * Load next page of movies if possible
+   * Load a page of movies from web service
    */
-  public void loadMore() {
-    fetchMoviesPage(discoverApi.getMovies(HttpUtils.discoveryQueryOptions(sortBy, page)));
-  }
-
-  /**
-   * Return movies LiveData
-   */
-  public LiveData<List<Result>> getMoviesList() {
-    List<Result> movies = moviesList.getValue();
-    if (movies == null || movies.size() == 0) {
-      // Auto load if list is empty
-      loadMore();
-    }
-    return moviesList;
-  }
-
-  /**
-   * Return loading status LiveData
-   */
-  public LiveData<Boolean> getLoading() {
-    return loading;
-  }
-
-  /**
-   * Return sorting order
-   */
-  public String getSortBy() {
-    return sortBy;
-  }
-
-  /**
-   * Set sorting order and reload data if necessary
-   */
-  public void setSortBy(String sortBy) {
-    if (TextUtils.equals(this.sortBy, sortBy)) {
-      return;
-    }
-    this.sortBy = sortBy;
-    sharedPrefs.edit().putString(SORT_ORDER_KEY, sortBy).apply();
-    refresh();
-  }
-
-  /**
-   * Load movies from web service
-   */
-  private void fetchMoviesPage(Call<MoviesPage> discoverApiCall) {
-    loading.setValue(true);
+  public void loadMoviesPage(String sortBy, int page) {
+    Call<MoviesPage> discoverApiCall = discoverApi.getMovies(HttpUtils.discoveryQueryOptions(sortBy, page));
+    liveLoadingStatus.setValue(true);
     executor.execute(() -> discoverApiCall.enqueue(new Callback<MoviesPage>() {
 
       @Override
       public void onResponse(@NonNull Call<MoviesPage> call,
                              @NonNull Response<MoviesPage> response) {
-        MoviesPage moviesPage = response.body();
-        List<Result> movies = moviesPage != null ? moviesPage.getResults() : null;
-        if (moviesList.getValue() == null) {
-          moviesList.setValue(movies);
-        } else if (movies != null) {
-          moviesList.getValue().addAll(movies);
+        if (response.isSuccessful()) {
+          MoviesPage moviesPage = response.body();
+          liveMoviesPage.setValue(moviesPage != null ? moviesPage.getResults() : null);
+          Log.d(TAG, "Finished loading page " + page);
+        } else {
+          Log.d(TAG, "Failed to load page " + page + ". Error code: " + response.code());
         }
-        Log.i(TAG, "Finished loading page " + page);
-        ++page;
-        loading.setValue(false);
+        liveLoadingStatus.postValue(false);
       }
 
       @Override
       public void onFailure(@NonNull Call<MoviesPage> call,
                             @NonNull Throwable t) {
-        Log.w(TAG, "Failed to load page " + page);
-        loading.setValue(false);
+        Log.d(TAG, "Failed to load page " + page);
+        liveLoadingStatus.postValue(false);
       }
     }));
   }
+
+  /**
+   * Return movies page
+   */
+  public LiveData<List<Result>> getMoviesPage() {
+    return liveMoviesPage;
+  }
+
+  /**
+   * Return liveLoadingStatus status LiveData
+   */
+  public LiveData<Boolean> getLoadingStatus() {
+    return liveLoadingStatus;
+  }
+
+  // -----------------------------------------------------------------------------------------------
+  // Movies details
+
 }

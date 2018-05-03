@@ -61,7 +61,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
     return moviesData.size();
   }
 
-  public void setMoviesData(List<Result> moviesData) {
+  public void submitList(List<Result> moviesData) {
     this.moviesData = moviesData;
     notifyDataSetChanged();
   }
