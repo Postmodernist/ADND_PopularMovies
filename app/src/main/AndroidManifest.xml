@@ -28,15 +28,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".activities.DetailActivity"
-            android:parentActivityName=".activities.MainActivity"
-            tools:targetApi="jelly_bean">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.MainActivity" />
-        </activity>
-
     </application>
 
 </manifest>

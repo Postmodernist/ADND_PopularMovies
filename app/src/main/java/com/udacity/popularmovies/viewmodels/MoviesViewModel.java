@@ -1,14 +1,16 @@
 package com.udacity.popularmovies.viewmodels;
 
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MediatorLiveData;
 import android.arch.lifecycle.Transformations;
 import android.arch.lifecycle.ViewModel;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.udacity.popularmovies.api.HttpUtils;
-import com.udacity.popularmovies.model.discover.Result;
+import com.udacity.popularmovies.api.ApiUtils;
+import com.udacity.popularmovies.model.detail.MovieDetail;
+import com.udacity.popularmovies.model.discover.MovieItem;
 import com.udacity.popularmovies.repositories.MoviesRepository;
 
 import java.util.ArrayList;
@@ -22,11 +24,19 @@ public class MoviesViewModel extends ViewModel {
 
   private MoviesRepository moviesRepo;
   private SharedPreferences sharedPrefs;
-  private LiveData<List<Result>> liveMoviesList;
-  private LiveData<Boolean> liveLoadingStatus;
-  private List<Result> moviesList = new ArrayList<>();
-  private int page;
+
+  private boolean isInitialized = false;
+
+  // Movies list
+  private LiveData<List<MovieItem>> liveMoviesList;
+  private MediatorLiveData<Boolean> liveLoadingStatus = new MediatorLiveData<>();
+  private List<MovieItem> moviesList = new ArrayList<>();
+  private int page = STARTING_PAGE;
   private String sortBy;
+
+  // Movie details
+  private MediatorLiveData<MovieDetail> liveMovieDetail = new MediatorLiveData<>();
+  private int lastMovieId;
 
   MoviesViewModel(MoviesRepository moviesRepo, SharedPreferences sharedPrefs) {
     this.moviesRepo = moviesRepo;
@@ -34,9 +44,10 @@ public class MoviesViewModel extends ViewModel {
   }
 
   public void init() {
-    if (liveMoviesList != null) {
+    if (isInitialized) {
       return;
     }
+    isInitialized = true;
     Log.d(TAG, "Initializing ViewModel");
     liveMoviesList = Transformations.map(moviesRepo.getMoviesPage(), movies -> {
       if (movies != null) {
@@ -45,9 +56,9 @@ public class MoviesViewModel extends ViewModel {
       }
       return moviesList;
     });
-    liveLoadingStatus = moviesRepo.getLoadingStatus();
-    sortBy = sharedPrefs.getString(SORT_ORDER_KEY, HttpUtils.SORT_BY_POPULARITY);
-    page = STARTING_PAGE;
+    liveLoadingStatus.addSource(moviesRepo.getLoadingStatus(), liveLoadingStatus::setValue);
+    liveMovieDetail.addSource(moviesRepo.getMovieDetail(), liveMovieDetail::setValue);
+    sortBy = sharedPrefs.getString(SORT_ORDER_KEY, ApiUtils.SORT_BY_POPULARITY);
     loadMore();
   }
 
@@ -62,7 +73,7 @@ public class MoviesViewModel extends ViewModel {
     moviesRepo.loadMoviesPage(sortBy, page);
   }
 
-  public LiveData<List<Result>> getMoviesList() {
+  public LiveData<List<MovieItem>> getMoviesList() {
     return liveMoviesList;
   }
 
@@ -81,5 +92,13 @@ public class MoviesViewModel extends ViewModel {
     this.sortBy = sortBy;
     sharedPrefs.edit().putString(SORT_ORDER_KEY, sortBy).apply();
     refresh();
+  }
+
+  public LiveData<MovieDetail> getMovieDetail(int movieId) {
+    if (lastMovieId != movieId) {
+      lastMovieId = movieId;
+      moviesRepo.loadMovieDetail(movieId);
+    }
+    return liveMovieDetail;
   }
 }

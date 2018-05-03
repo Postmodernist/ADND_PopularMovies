@@ -17,10 +17,10 @@ public class MoviesViewModelFactory extends ViewModelProvider.NewInstanceFactory
     this.sharedPrefs = sharedPrefs;
   }
 
-  @SuppressWarnings("unchecked")
   @NonNull
   @Override
   public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
+    // noinspection unchecked
     return (T) new MoviesViewModel(moviesRepository, sharedPrefs);
   }
 }

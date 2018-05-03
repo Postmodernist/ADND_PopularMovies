@@ -10,8 +10,8 @@ import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 import com.udacity.popularmovies.R;
-import com.udacity.popularmovies.api.HttpUtils;
-import com.udacity.popularmovies.model.discover.Result;
+import com.udacity.popularmovies.api.ApiUtils;
+import com.udacity.popularmovies.model.discover.MovieItem;
 
 import java.util.List;
 
@@ -20,19 +20,19 @@ import butterknife.ButterKnife;
 
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewHolder> {
 
-  private List<Result> moviesData;
-  private MoviesOnClickHandler clickHandler;
+  private List<MovieItem> moviesData;
+  private MovieClickCallback clickCallback;
   private ViewGroup.LayoutParams itemLayoutParams;
 
   /**
    * MoviesAdapter constructor
    *
-   * @param clickHandler The on-click handler for this adapter.
-   * @param itemHeight   The height of the items inflated by the adapter.
+   * @param clickCallback The on-click handler for this adapter.
+   * @param itemHeight    The height of the items inflated by the adapter.
    */
-  public MoviesAdapter(MoviesOnClickHandler clickHandler, int itemHeight) {
-    this.clickHandler = clickHandler;
+  public MoviesAdapter(int itemHeight, MovieClickCallback clickCallback) {
     itemLayoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, itemHeight);
+    this.clickCallback = clickCallback;
   }
 
   @NonNull
@@ -40,7 +40,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
   public MovieViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
     Context context = parent.getContext();
     LayoutInflater inflater = LayoutInflater.from(context);
-    View view = inflater.inflate(R.layout.movie_grid_item, parent, false);
+    View view = inflater.inflate(R.layout.discovery_grid_item, parent, false);
     view.findViewById(R.id.iv_poster).setLayoutParams(itemLayoutParams);  // set row height
     return new MovieViewHolder(view);
   }
@@ -49,7 +49,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
   public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
     ImageView posterView = holder.getPosterView();
     String posterPath = moviesData.get(position).getPosterPath();
-    String posterUrl = HttpUtils.posterUrl(posterPath);
+    String posterUrl = ApiUtils.posterUrl(posterPath);
     Picasso.get().load(posterUrl).into(posterView);
   }
 
@@ -61,7 +61,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
     return moviesData.size();
   }
 
-  public void submitList(List<Result> moviesData) {
+  public void submitList(List<MovieItem> moviesData) {
     this.moviesData = moviesData;
     notifyDataSetChanged();
   }
@@ -69,8 +69,8 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
   /**
    * The interface that receives onClick messages
    */
-  public interface MoviesOnClickHandler {
-    void onClick(Result movie);
+  public interface MovieClickCallback {
+    void onClick(MovieItem movie);
   }
 
   /**
@@ -89,7 +89,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
 
     @Override
     public void onClick(View v) {
-      clickHandler.onClick(moviesData.get(getAdapterPosition()));
+      clickCallback.onClick(moviesData.get(getAdapterPosition()));
     }
 
     ImageView getPosterView() {
