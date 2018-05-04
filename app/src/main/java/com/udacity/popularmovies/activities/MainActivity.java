@@ -3,13 +3,13 @@ package com.udacity.popularmovies.activities;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.udacity.popularmovies.R;
 import com.udacity.popularmovies.fragments.DetailsFragment;
 import com.udacity.popularmovies.fragments.DiscoveryFragment;
-import com.udacity.popularmovies.model.discover.MovieItem;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,6 +20,14 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
+    getSupportFragmentManager().addOnBackStackChangedListener(() -> {
+      ActionBar actionBar = getSupportActionBar();
+      if (actionBar != null) {
+        boolean enabled = getSupportFragmentManager().getBackStackEntryCount() > 0;
+        actionBar.setDisplayHomeAsUpEnabled(enabled);
+      }
+    });
+
     // Add movies list fragment if this is a first creation
     if (savedInstanceState == null) {
       Log.d(TAG, "Starting discovery fragment");
@@ -28,6 +36,12 @@ public class MainActivity extends AppCompatActivity {
           .add(R.id.fragment_container, fragment)
           .commit();
     }
+  }
+
+  @Override
+  public boolean onSupportNavigateUp() {
+    getSupportFragmentManager().popBackStack();
+    return true;
   }
 
   /**
