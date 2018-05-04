@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.udacity.popularmovies.api.MoviesApi;
-import com.udacity.popularmovies.api.ApiUtils;
+import com.udacity.popularmovies.utils.ApiUtils;
 import com.udacity.popularmovies.model.detail.MovieDetail;
 import com.udacity.popularmovies.model.discover.MoviesPage;
 import com.udacity.popularmovies.model.discover.MovieItem;
@@ -24,7 +24,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public final class MoviesRepository {
 
   private static final String TAG = "TAG_" + MoviesRepository.class.getSimpleName();
-  private static MoviesRepository INSTANCE;
 
   private MoviesApi moviesApi;
   private Executor executor;
@@ -32,23 +31,10 @@ public final class MoviesRepository {
   private MutableLiveData<Boolean> liveLoadingStatus = new MutableLiveData<>();
   private MutableLiveData<MovieDetail> liveMovieDetail = new MutableLiveData<>();
 
-  private MoviesRepository(MoviesApi moviesApi, Executor executor) {
+  public MoviesRepository(MoviesApi moviesApi, Executor executor) {
     this.moviesApi = moviesApi;
     this.executor = executor;
     liveLoadingStatus.setValue(false);
-  }
-
-  public static MoviesRepository getInstance() {
-    if (INSTANCE == null) {
-      Retrofit retrofit = new Retrofit.Builder()
-          .baseUrl(ApiUtils.BASE_URL)
-          .addConverterFactory(GsonConverterFactory.create())
-          .build();
-      MoviesApi moviesApi = retrofit.create(MoviesApi.class);
-      Executor executor = Executors.newFixedThreadPool(2);
-      INSTANCE = new MoviesRepository(moviesApi, executor);
-    }
-    return INSTANCE;
   }
 
   // -----------------------------------------------------------------------------------------------

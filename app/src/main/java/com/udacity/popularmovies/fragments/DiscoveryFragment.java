@@ -2,10 +2,8 @@ package com.udacity.popularmovies.fragments;
 
 import android.arch.lifecycle.Lifecycle;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
+import android.content.Context;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -24,16 +22,20 @@ import android.widget.TextView;
 import com.udacity.popularmovies.R;
 import com.udacity.popularmovies.activities.MainActivity;
 import com.udacity.popularmovies.adapters.MoviesAdapter;
-import com.udacity.popularmovies.api.ApiUtils;
-import com.udacity.popularmovies.repositories.MoviesRepository;
+import com.udacity.popularmovies.utils.ApiUtils;
+import com.udacity.popularmovies.utils.ConnectionUtils;
 import com.udacity.popularmovies.utils.EndlessRecyclerViewScrollListener;
 import com.udacity.popularmovies.viewmodels.MoviesViewModel;
 import com.udacity.popularmovies.viewmodels.MoviesViewModelFactory;
 
 import java.util.Objects;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import dagger.android.support.AndroidSupportInjection;
 
 public class DiscoveryFragment extends Fragment {
 
@@ -46,13 +48,25 @@ public class DiscoveryFragment extends Fragment {
   @BindView(R.id.pb_loading)
   ProgressBar progressBar;
 
-  private int gridColumnsNumber;
-  private int gridRowHeight;
+  @Inject
+  MoviesViewModelFactory viewModelFactory;
+  @Inject
+  @Named("columns number")
+  int gridColumnsNumber;
+  @Inject
+  @Named("row height")
+  int gridRowHeight;
 
   private MainActivity mainActivity;
-  private MoviesAdapter adapter;
   private MoviesViewModel viewModel;
+  private MoviesAdapter adapter;
   private EndlessRecyclerViewScrollListener scrollListener;
+
+  @Override
+  public void onAttach(Context context) {
+    AndroidSupportInjection.inject(this);
+    super.onAttach(context);
+  }
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -75,8 +89,8 @@ public class DiscoveryFragment extends Fragment {
   @Override
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-
     mainActivity = (MainActivity) Objects.requireNonNull(getActivity());
+
     setupViewModel();
 
     // Change title according to sort order
@@ -89,7 +103,6 @@ public class DiscoveryFragment extends Fragment {
   }
 
   private void setupGrid() {
-    initGridDimens();
     GridLayoutManager layoutManager = new GridLayoutManager(getContext(), gridColumnsNumber);
 
     adapter = new MoviesAdapter(gridRowHeight, (movie, position) -> {
@@ -101,7 +114,7 @@ public class DiscoveryFragment extends Fragment {
     scrollListener = new EndlessRecyclerViewScrollListener(layoutManager) {
       @Override
       public void onLoadMore() {
-        if (mainActivity.isOnline()) {
+        if (ConnectionUtils.isOnline(mainActivity.getApplication())) {
           Log.d(TAG, "Requesting more data...");
           viewModel.loadMore();
         }
@@ -114,14 +127,9 @@ public class DiscoveryFragment extends Fragment {
   }
 
   private void setupViewModel() {
-    MoviesRepository repository = MoviesRepository.getInstance();
-    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mainActivity);
-
-    viewModel = ViewModelProviders
-        .of(mainActivity, new MoviesViewModelFactory(repository, sharedPrefs))
-        .get(MoviesViewModel.class);
+    viewModel = ViewModelProviders.of(mainActivity, viewModelFactory).get(MoviesViewModel.class);
     viewModel.init();
-    viewModel.getMoviesList().observe(this, moviesList -> adapter.submitList(moviesList));
+    viewModel.getMoviesList().observe(this, adapter::submitList);
     viewModel.getLoadingStatus().observe(this, this::updateViewsVisibility);
   }
 
@@ -178,23 +186,9 @@ public class DiscoveryFragment extends Fragment {
   // -----------------------------------------------------------------------------------------------
 
   /**
-   * Initialize the number of columns and row height of in RecyclerView grid
-   */
-  private void initGridDimens() {
-    int displayWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
-    int displayHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
-    int gridColumnsPortrait = getResources().getInteger(R.integer.grid_columns_portrait);
-    int gridColumnsLandscape = getResources().getInteger(R.integer.grid_columns_landscape);
-    gridColumnsNumber = displayWidth < displayHeight ? gridColumnsPortrait : gridColumnsLandscape;
-    int widthRatio = getResources().getInteger(R.integer.poster_width_ratio);
-    int heightRatio = getResources().getInteger(R.integer.poster_height_ratio);
-    gridRowHeight = displayWidth * heightRatio / (gridColumnsNumber * widthRatio);
-  }
-
-  /**
    * Update UI elements visibility
    */
-  private void updateViewsVisibility(Boolean loading) {
+  public void updateViewsVisibility(Boolean loading) {
     if (!loading && adapter.getItemCount() == 0) {
       // Finished loading but nothing to show
       progressBar.setVisibility(View.INVISIBLE);

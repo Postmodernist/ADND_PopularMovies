@@ -2,6 +2,7 @@ package com.udacity.popularmovies.api;
 
 import com.udacity.popularmovies.model.detail.MovieDetail;
 import com.udacity.popularmovies.model.discover.MoviesPage;
+import com.udacity.popularmovies.utils.ApiUtils;
 
 import java.util.Map;
 

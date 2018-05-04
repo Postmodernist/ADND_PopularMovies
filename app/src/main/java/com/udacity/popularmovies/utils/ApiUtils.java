@@ -1,4 +1,4 @@
-package com.udacity.popularmovies.api;
+package com.udacity.popularmovies.utils;
 
 import android.net.Uri;
 import android.support.annotation.NonNull;

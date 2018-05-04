@@ -28,6 +28,16 @@ public class MovieDetail {
   @Expose
   private Double voteAverage;
 
+  public MovieDetail(MovieItem movieItem) {
+    id = movieItem.getId();
+    originalTitle = movieItem.getOriginalTitle();
+    overview = movieItem.getOverview();
+    posterPath = movieItem.getPosterPath();
+    releaseDate = movieItem.getReleaseDate();
+    runtime = Integer.MIN_VALUE;
+    voteAverage = movieItem.getVoteAverage();
+  }
+
   public Integer getId() {
     return id;
   }
@@ -54,15 +64,5 @@ public class MovieDetail {
 
   public Double getVoteAverage() {
     return voteAverage;
-  }
-
-  public MovieDetail(MovieItem movieItem) {
-    id = movieItem.getId();
-    originalTitle = movieItem.getOriginalTitle();
-    overview = movieItem.getOverview();
-    posterPath = movieItem.getPosterPath();
-    releaseDate = movieItem.getReleaseDate();
-    runtime = Integer.MIN_VALUE;
-    voteAverage = movieItem.getVoteAverage();
   }
 }

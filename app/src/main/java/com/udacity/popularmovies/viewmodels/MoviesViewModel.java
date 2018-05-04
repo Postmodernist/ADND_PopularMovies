@@ -8,10 +8,10 @@ import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.udacity.popularmovies.api.ApiUtils;
 import com.udacity.popularmovies.model.detail.MovieDetail;
 import com.udacity.popularmovies.model.discover.MovieItem;
 import com.udacity.popularmovies.repositories.MoviesRepository;
+import com.udacity.popularmovies.utils.ApiUtils;
 
 import java.util.ArrayList;
 import java.util.List;

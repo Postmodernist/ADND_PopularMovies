@@ -10,7 +10,7 @@ import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 import com.udacity.popularmovies.R;
-import com.udacity.popularmovies.api.ApiUtils;
+import com.udacity.popularmovies.utils.ApiUtils;
 import com.udacity.popularmovies.model.discover.MovieItem;
 
 import java.util.List;

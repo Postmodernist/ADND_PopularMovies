@@ -1,11 +1,10 @@
 package com.udacity.popularmovies.fragments;
 
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.SharedPreferences;
+import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -20,9 +19,8 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 import com.udacity.popularmovies.R;
 import com.udacity.popularmovies.activities.MainActivity;
-import com.udacity.popularmovies.api.ApiUtils;
 import com.udacity.popularmovies.model.detail.MovieDetail;
-import com.udacity.popularmovies.repositories.MoviesRepository;
+import com.udacity.popularmovies.utils.ApiUtils;
 import com.udacity.popularmovies.viewmodels.MoviesViewModel;
 import com.udacity.popularmovies.viewmodels.MoviesViewModelFactory;
 
@@ -33,10 +31,13 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.Objects;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import dagger.android.support.AndroidSupportInjection;
 
-public class DetailsFragment extends Fragment {
+public class DetailFragment extends Fragment {
 
   private static final String KEY_MOVIE_ID = "movie_id";
   private static final String KEY_POSITION = "position";
@@ -56,18 +57,27 @@ public class DetailsFragment extends Fragment {
   @BindView(R.id.tv_overview)
   TextView overviewView;
 
+  @Inject
+  MoviesViewModelFactory viewModelFactory;
+
   private MainActivity mainActivity;
 
   /**
    * Create details fragment for specific movie
    */
-  public static DetailsFragment forMovie(int movieId, int position) {
-    DetailsFragment fragment = new DetailsFragment();
+  public static DetailFragment forMovie(int movieId, int position) {
+    DetailFragment fragment = new DetailFragment();
     Bundle args = new Bundle();
     args.putInt(KEY_MOVIE_ID, movieId);
     args.putInt(KEY_POSITION, position);
     fragment.setArguments(args);
     return fragment;
+  }
+
+  @Override
+  public void onAttach(Context context) {
+    AndroidSupportInjection.inject(this);
+    super.onAttach(context);
   }
 
   @Nullable
@@ -84,6 +94,7 @@ public class DetailsFragment extends Fragment {
     super.onActivityCreated(savedInstanceState);
 
     mainActivity = (MainActivity) Objects.requireNonNull(getActivity());
+    mainActivity.showBackInActionBar();
     Bundle args = getArguments();
     if (args != null && args.containsKey(KEY_MOVIE_ID) && args.containsKey(KEY_POSITION)) {
       final int movieId = args.getInt(KEY_MOVIE_ID);
@@ -96,16 +107,9 @@ public class DetailsFragment extends Fragment {
   }
 
   private void setupViewModel(int movieId, int position) {
-    MoviesRepository repository = MoviesRepository.getInstance();
-    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mainActivity);
-
-    MoviesViewModel viewModel = ViewModelProviders
-        .of(mainActivity, new MoviesViewModelFactory(repository, sharedPrefs))
-        .get(MoviesViewModel.class);
+    MoviesViewModel viewModel = ViewModelProviders.of(mainActivity, viewModelFactory).get(MoviesViewModel.class);
     viewModel.getMovieDetail(movieId, position).observe(this, this::populateViews);
   }
-
-  // -----------------------------------------------------------------------------------------------
 
   /**
    * Return RecyclerView grid row height
