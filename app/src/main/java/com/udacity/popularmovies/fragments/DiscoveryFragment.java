@@ -54,7 +54,6 @@ public class DiscoveryFragment extends Fragment {
   private MoviesViewModel viewModel;
   private EndlessRecyclerViewScrollListener scrollListener;
 
-
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -93,13 +92,9 @@ public class DiscoveryFragment extends Fragment {
     initGridDimens();
     GridLayoutManager layoutManager = new GridLayoutManager(getContext(), gridColumnsNumber);
 
-    adapter = new MoviesAdapter(gridRowHeight, movie -> {
-      Log.d(TAG, "Item clicked: " + movie.getOriginalTitle());
+    adapter = new MoviesAdapter(gridRowHeight, (movie, position) -> {
       if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-        MainActivity mainActivity = (MainActivity) getActivity();
-        if (mainActivity != null) {
-          mainActivity.showMovieDetails(movie);
-        }
+        mainActivity.showMovieDetails(movie, position);
       }
     });
 
@@ -162,9 +157,10 @@ public class DiscoveryFragment extends Fragment {
    * Change movies sorting order
    */
   private void changeSortOrder(String sortBy, int titleId) {
-    viewModel.setSortBy(sortBy);
-    mainActivity.setTitle(getString(titleId));
-    refreshUi();
+    if (viewModel.setSortBy(sortBy)) {
+      mainActivity.setTitle(getString(titleId));
+      refreshUi();
+    }
   }
 
   /**

@@ -39,6 +39,7 @@ import butterknife.ButterKnife;
 public class DetailsFragment extends Fragment {
 
   private static final String KEY_MOVIE_ID = "movie_id";
+  private static final String KEY_POSITION = "position";
 
   @BindView(R.id.tv_error)
   TextView errorView;
@@ -60,30 +61,13 @@ public class DetailsFragment extends Fragment {
   /**
    * Create details fragment for specific movie
    */
-  public static DetailsFragment forMovie(int movieId) {
+  public static DetailsFragment forMovie(int movieId, int position) {
     DetailsFragment fragment = new DetailsFragment();
     Bundle args = new Bundle();
     args.putInt(KEY_MOVIE_ID, movieId);
+    args.putInt(KEY_POSITION, position);
     fragment.setArguments(args);
     return fragment;
-  }
-
-  /**
-   * Extract year from a string of form yyyy-MM-dd
-   */
-  private static int extractYear(String dateStr) {
-    if (TextUtils.isEmpty(dateStr)) {
-      return Integer.MIN_VALUE;
-    }
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-    Calendar calendar = new GregorianCalendar();
-    try {
-      calendar.setTime(sdf.parse(dateStr));
-      return calendar.get(Calendar.YEAR);
-    } catch (ParseException e) {
-      e.printStackTrace();
-    }
-    return Integer.MIN_VALUE;
   }
 
   @Nullable
@@ -100,25 +84,25 @@ public class DetailsFragment extends Fragment {
     super.onActivityCreated(savedInstanceState);
 
     mainActivity = (MainActivity) Objects.requireNonNull(getActivity());
-    Bundle args = Objects.requireNonNull(getArguments());
-    final int movieId = args.getInt(KEY_MOVIE_ID);
-
-    if (mainActivity.isOnline()) {
+    Bundle args = getArguments();
+    if (args != null && args.containsKey(KEY_MOVIE_ID) && args.containsKey(KEY_POSITION)) {
+      final int movieId = args.getInt(KEY_MOVIE_ID);
+      final int position = args.getInt(KEY_POSITION);
       setPosterDimens();
-      setupViewModel(movieId);
+      setupViewModel(movieId, position);
     } else {
       showError();
     }
   }
 
-  private void setupViewModel(int movieId) {
+  private void setupViewModel(int movieId, int position) {
     MoviesRepository repository = MoviesRepository.getInstance();
     SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mainActivity);
 
     MoviesViewModel viewModel = ViewModelProviders
         .of(mainActivity, new MoviesViewModelFactory(repository, sharedPrefs))
         .get(MoviesViewModel.class);
-    viewModel.getMovieDetail(movieId).observe(this, this::populateViews);
+    viewModel.getMovieDetail(movieId, position).observe(this, this::populateViews);
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -176,8 +160,8 @@ public class DetailsFragment extends Fragment {
 
     final String NOT_AVAILABLE = getString(R.string.not_available);
     String sTmp;
-    int iTmp;
-    double dTmp;
+    Integer iTmp;
+    Double dTmp;
 
     // Get values
     final String posterPath = movie.getPosterPath();
@@ -188,10 +172,10 @@ public class DetailsFragment extends Fragment {
     final String releaseDate = (iTmp = extractYear(movie.getReleaseDate())) != Integer.MIN_VALUE ?
         String.valueOf(iTmp) : NOT_AVAILABLE;
 
-    final String runtime = (iTmp = movie.getRuntime()) != Integer.MIN_VALUE ?
+    final String runtime = ((iTmp = movie.getRuntime()) != null) && (iTmp != Integer.MIN_VALUE) ?
         getString(R.string.runtime_text, iTmp) : NOT_AVAILABLE;
 
-    final String voteAverage = (dTmp = movie.getVoteAverage()) != Double.MIN_VALUE ?
+    final String voteAverage = (dTmp = movie.getVoteAverage()) != null ?
         getString(R.string.vote_average_text, dTmp) : NOT_AVAILABLE;
 
     final String overview = !TextUtils.isEmpty(sTmp = movie.getOverview()) ? sTmp : NOT_AVAILABLE;
@@ -205,6 +189,24 @@ public class DetailsFragment extends Fragment {
 
     // Change title
     mainActivity.setTitle(title);
+  }
+
+  /**
+   * Extract year from a string of form yyyy-MM-dd
+   */
+  private int extractYear(String dateStr) {
+    if (TextUtils.isEmpty(dateStr)) {
+      return Integer.MIN_VALUE;
+    }
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+    Calendar calendar = new GregorianCalendar();
+    try {
+      calendar.setTime(sdf.parse(dateStr));
+      return calendar.get(Calendar.YEAR);
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
+    return Integer.MIN_VALUE;
   }
 
   /**

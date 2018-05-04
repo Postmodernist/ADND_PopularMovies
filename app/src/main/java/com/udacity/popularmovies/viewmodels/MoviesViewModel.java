@@ -85,18 +85,20 @@ public class MoviesViewModel extends ViewModel {
     return sortBy;
   }
 
-  public void setSortBy(String sortBy) {
+  public boolean setSortBy(String sortBy) {
     if (TextUtils.equals(this.sortBy, sortBy)) {
-      return;
+      return false;
     }
     this.sortBy = sortBy;
     sharedPrefs.edit().putString(SORT_ORDER_KEY, sortBy).apply();
     refresh();
+    return true;
   }
 
-  public LiveData<MovieDetail> getMovieDetail(int movieId) {
+  public LiveData<MovieDetail> getMovieDetail(int movieId, int position) {
     if (lastMovieId != movieId) {
       lastMovieId = movieId;
+      liveMovieDetail.setValue(new MovieDetail(moviesList.get(position)));
       moviesRepo.loadMovieDetail(movieId);
     }
     return liveMovieDetail;

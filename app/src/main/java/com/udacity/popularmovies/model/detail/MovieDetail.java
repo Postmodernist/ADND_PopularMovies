@@ -2,6 +2,7 @@ package com.udacity.popularmovies.model.detail;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.udacity.popularmovies.model.discover.MovieItem;
 
 public class MovieDetail {
 
@@ -53,5 +54,15 @@ public class MovieDetail {
 
   public Double getVoteAverage() {
     return voteAverage;
+  }
+
+  public MovieDetail(MovieItem movieItem) {
+    id = movieItem.getId();
+    originalTitle = movieItem.getOriginalTitle();
+    overview = movieItem.getOverview();
+    posterPath = movieItem.getPosterPath();
+    releaseDate = movieItem.getReleaseDate();
+    runtime = Integer.MIN_VALUE;
+    voteAverage = movieItem.getVoteAverage();
   }
 }

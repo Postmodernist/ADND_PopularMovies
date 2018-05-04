@@ -70,7 +70,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
    * The interface that receives onClick messages
    */
   public interface MovieClickCallback {
-    void onClick(MovieItem movie);
+    void onClick(int movieId, int position);
   }
 
   /**
@@ -89,7 +89,8 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
 
     @Override
     public void onClick(View v) {
-      clickCallback.onClick(moviesData.get(getAdapterPosition()));
+      int position = getAdapterPosition();
+      clickCallback.onClick(moviesData.get(position).getId(), position);
     }
 
     ImageView getPosterView() {

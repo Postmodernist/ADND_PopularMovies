@@ -33,8 +33,8 @@ public class MainActivity extends AppCompatActivity {
   /**
    * Show movie details fragment
    */
-  public void showMovieDetails(MovieItem movie) {
-    DetailsFragment fragment = DetailsFragment.forMovie(movie.getId());
+  public void showMovieDetails(int movieId, int position) {
+    DetailsFragment fragment = DetailsFragment.forMovie(movieId, position);
     getSupportFragmentManager()
         .beginTransaction()
         .addToBackStack("movie")
