@@ -1,6 +1,5 @@
 package com.udacity.popularmovies.fragments;
 
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -17,12 +16,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
+import com.udacity.popularmovies.MoviesApplication;
 import com.udacity.popularmovies.R;
 import com.udacity.popularmovies.activities.MainActivity;
+import com.udacity.popularmovies.di.components.DaggerDetailFragmentComponent;
 import com.udacity.popularmovies.model.detail.MovieDetail;
 import com.udacity.popularmovies.utils.ApiUtils;
 import com.udacity.popularmovies.viewmodels.MoviesViewModel;
-import com.udacity.popularmovies.viewmodels.MoviesViewModelFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -35,7 +35,6 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import dagger.android.support.AndroidSupportInjection;
 
 public class DetailFragment extends Fragment {
 
@@ -58,7 +57,7 @@ public class DetailFragment extends Fragment {
   TextView overviewView;
 
   @Inject
-  MoviesViewModelFactory viewModelFactory;
+  MoviesViewModel viewModel;
 
   private MainActivity mainActivity;
 
@@ -76,7 +75,7 @@ public class DetailFragment extends Fragment {
 
   @Override
   public void onAttach(Context context) {
-    AndroidSupportInjection.inject(this);
+    setupDagger();
     super.onAttach(context);
   }
 
@@ -106,8 +105,15 @@ public class DetailFragment extends Fragment {
     }
   }
 
+  private void setupDagger() {
+    DaggerDetailFragmentComponent.builder()
+        .appComponent(MoviesApplication.getAppComponent(Objects.requireNonNull(getContext())))
+        .fragment(this)
+        .build()
+        .inject(this);
+  }
+
   private void setupViewModel(int movieId, int position) {
-    MoviesViewModel viewModel = ViewModelProviders.of(mainActivity, viewModelFactory).get(MoviesViewModel.class);
     viewModel.getMovieDetail(movieId, position).observe(this, this::populateViews);
   }
 

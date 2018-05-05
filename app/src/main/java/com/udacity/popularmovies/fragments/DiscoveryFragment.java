@@ -1,7 +1,5 @@
 package com.udacity.popularmovies.fragments;
 
-import android.arch.lifecycle.Lifecycle;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -19,23 +17,23 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.udacity.popularmovies.MoviesApplication;
 import com.udacity.popularmovies.R;
 import com.udacity.popularmovies.activities.MainActivity;
 import com.udacity.popularmovies.adapters.MoviesAdapter;
+import com.udacity.popularmovies.di.components.DaggerDiscoveryFragmentComponent;
+import com.udacity.popularmovies.di.components.DiscoveryFragmentComponent;
 import com.udacity.popularmovies.utils.ApiUtils;
 import com.udacity.popularmovies.utils.ConnectionUtils;
 import com.udacity.popularmovies.utils.EndlessRecyclerViewScrollListener;
 import com.udacity.popularmovies.viewmodels.MoviesViewModel;
-import com.udacity.popularmovies.viewmodels.MoviesViewModelFactory;
 
 import java.util.Objects;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import dagger.android.support.AndroidSupportInjection;
 
 public class DiscoveryFragment extends Fragment {
 
@@ -49,22 +47,17 @@ public class DiscoveryFragment extends Fragment {
   ProgressBar progressBar;
 
   @Inject
-  MoviesViewModelFactory viewModelFactory;
+  MoviesViewModel viewModel;
   @Inject
-  @Named("columns number")
-  int gridColumnsNumber;
-  @Inject
-  @Named("row height")
-  int gridRowHeight;
+  MoviesAdapter adapter;
 
+  private DiscoveryFragmentComponent discoveryFragmentComponent;
   private MainActivity mainActivity;
-  private MoviesViewModel viewModel;
-  private MoviesAdapter adapter;
   private EndlessRecyclerViewScrollListener scrollListener;
 
   @Override
   public void onAttach(Context context) {
-    AndroidSupportInjection.inject(this);
+    setupDagger();
     super.onAttach(context);
   }
 
@@ -102,15 +95,16 @@ public class DiscoveryFragment extends Fragment {
 
   }
 
+  private void setupDagger() {
+    discoveryFragmentComponent = DaggerDiscoveryFragmentComponent.builder()
+        .appComponent(MoviesApplication.getAppComponent(Objects.requireNonNull(getContext())))
+        .fragment(this)
+        .build();
+    discoveryFragmentComponent.inject(this);
+  }
+
   private void setupGrid() {
-    GridLayoutManager layoutManager = new GridLayoutManager(getContext(), gridColumnsNumber);
-
-    adapter = new MoviesAdapter(gridRowHeight, (movie, position) -> {
-      if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-        mainActivity.showMovieDetails(movie, position);
-      }
-    });
-
+    GridLayoutManager layoutManager = discoveryFragmentComponent.gridLayoutManager();
     scrollListener = new EndlessRecyclerViewScrollListener(layoutManager) {
       @Override
       public void onLoadMore() {
@@ -120,17 +114,45 @@ public class DiscoveryFragment extends Fragment {
         }
       }
     };
-
     moviesView.setLayoutManager(layoutManager);
     moviesView.setAdapter(adapter);
     moviesView.addOnScrollListener(scrollListener);
   }
 
   private void setupViewModel() {
-    viewModel = ViewModelProviders.of(mainActivity, viewModelFactory).get(MoviesViewModel.class);
     viewModel.init();
     viewModel.getMoviesList().observe(this, adapter::submitList);
     viewModel.getLoadingStatus().observe(this, this::updateViewsVisibility);
+  }
+
+  /**
+   * Update UI elements visibility
+   */
+  public void updateViewsVisibility(Boolean loading) {
+    if (!loading && adapter.getItemCount() == 0) {
+      // Finished loading but nothing to show
+      progressBar.setVisibility(View.INVISIBLE);
+      errorView.setVisibility(View.VISIBLE);
+      moviesView.setVisibility(View.INVISIBLE);
+
+    } else if (!loading && adapter.getItemCount() != 0) {
+      // Finished loading successfully
+      progressBar.setVisibility(View.INVISIBLE);
+      errorView.setVisibility(View.INVISIBLE);
+      moviesView.setVisibility(View.VISIBLE);
+
+    } else if (loading && adapter.getItemCount() == 0) {
+      // Started loading but nothing to show
+      progressBar.setVisibility(View.VISIBLE);
+      errorView.setVisibility(View.INVISIBLE);
+      moviesView.setVisibility(View.INVISIBLE);
+
+    } else if (loading && adapter.getItemCount() != 0) {
+      // Started loading while showing data
+      progressBar.setVisibility(View.INVISIBLE);
+      errorView.setVisibility(View.INVISIBLE);
+      moviesView.setVisibility(View.VISIBLE);
+    }
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -183,35 +205,4 @@ public class DiscoveryFragment extends Fragment {
     scrollListener.resetState();
   }
 
-  // -----------------------------------------------------------------------------------------------
-
-  /**
-   * Update UI elements visibility
-   */
-  public void updateViewsVisibility(Boolean loading) {
-    if (!loading && adapter.getItemCount() == 0) {
-      // Finished loading but nothing to show
-      progressBar.setVisibility(View.INVISIBLE);
-      errorView.setVisibility(View.VISIBLE);
-      moviesView.setVisibility(View.INVISIBLE);
-
-    } else if (!loading && adapter.getItemCount() != 0) {
-      // Finished loading successfully
-      progressBar.setVisibility(View.INVISIBLE);
-      errorView.setVisibility(View.INVISIBLE);
-      moviesView.setVisibility(View.VISIBLE);
-
-    } else if (loading && adapter.getItemCount() == 0) {
-      // Started loading but nothing to show
-      progressBar.setVisibility(View.VISIBLE);
-      errorView.setVisibility(View.INVISIBLE);
-      moviesView.setVisibility(View.INVISIBLE);
-
-    } else if (loading && adapter.getItemCount() != 0) {
-      // Started loading while showing data
-      progressBar.setVisibility(View.INVISIBLE);
-      errorView.setVisibility(View.INVISIBLE);
-      moviesView.setVisibility(View.VISIBLE);
-    }
-  }
 }

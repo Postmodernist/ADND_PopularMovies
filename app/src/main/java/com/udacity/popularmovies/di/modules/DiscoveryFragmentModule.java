@@ -1,10 +1,18 @@
 package com.udacity.popularmovies.di.modules;
 
-import android.app.Application;
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.res.Resources;
+import android.support.v7.widget.GridLayoutManager;
 
 import com.udacity.popularmovies.R;
+import com.udacity.popularmovies.activities.MainActivity;
+import com.udacity.popularmovies.adapters.MoviesAdapter;
+import com.udacity.popularmovies.di.scopes.DiscoveryFragmentScope;
+import com.udacity.popularmovies.fragments.DiscoveryFragment;
+import com.udacity.popularmovies.viewmodels.MoviesViewModel;
+import com.udacity.popularmovies.viewmodels.MoviesViewModelFactory;
 
 import javax.inject.Named;
 
@@ -13,6 +21,26 @@ import dagger.Provides;
 
 @Module
 public class DiscoveryFragmentModule {
+
+  @Provides
+  @DiscoveryFragmentScope
+  MoviesViewModel provideMoviesViewModel(MainActivity mainActivity, MoviesViewModelFactory viewModelFactory) {
+    return ViewModelProviders.of(mainActivity, viewModelFactory).get(MoviesViewModel.class);
+  }
+
+  @Provides
+  GridLayoutManager provideGridLayoutManager(Context context, @Named("columns number") int columnsNumber) {
+    return new GridLayoutManager(context, columnsNumber);
+  }
+
+  @Provides
+  MoviesAdapter provideMoviesAdapter(DiscoveryFragment fragment, MainActivity activity, @Named("row height") int rowHeight) {
+    return new MoviesAdapter(rowHeight, (movie, position) -> {
+      if (fragment.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+        activity.showMovieDetails(movie, position);
+      }
+    });
+  }
 
   @Provides
   @Named("columns number")
@@ -34,7 +62,12 @@ public class DiscoveryFragmentModule {
   }
 
   @Provides
-  Context provideContext(Application application) {
-    return  application.getApplicationContext();
+  Context provideContext(DiscoveryFragment fragment) {
+    return fragment.getContext();
+  }
+
+  @Provides
+  MainActivity provideMainActivity(DiscoveryFragment fragment) {
+    return (MainActivity) fragment.getActivity();
   }
 }

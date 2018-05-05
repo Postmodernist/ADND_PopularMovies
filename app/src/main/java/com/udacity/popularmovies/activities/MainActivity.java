@@ -17,16 +17,12 @@ import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
 
-public class MainActivity extends AppCompatActivity implements HasSupportFragmentInjector {
+public class MainActivity extends AppCompatActivity {
 
   private static final String TAG = "TAG_" + MainActivity.class.getSimpleName();
 
-  @Inject
-  DispatchingAndroidInjector<Fragment> dispatchingAndroidInjector;
-
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-    AndroidInjection.inject(this);
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
@@ -48,11 +44,6 @@ public class MainActivity extends AppCompatActivity implements HasSupportFragmen
       actionBar.setDisplayHomeAsUpEnabled(false);
     }
     return true;
-  }
-
-  @Override
-  public AndroidInjector<Fragment> supportFragmentInjector() {
-    return dispatchingAndroidInjector;
   }
 
   public void showBackInActionBar() {
