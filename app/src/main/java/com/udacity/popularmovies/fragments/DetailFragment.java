@@ -1,16 +1,23 @@
 package com.udacity.popularmovies.fragments;
 
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -19,6 +26,7 @@ import com.squareup.picasso.Picasso;
 import com.udacity.popularmovies.MoviesApplication;
 import com.udacity.popularmovies.R;
 import com.udacity.popularmovies.activities.MainActivity;
+import com.udacity.popularmovies.database.MovieContract.MovieEntry;
 import com.udacity.popularmovies.di.components.DaggerDetailFragmentComponent;
 import com.udacity.popularmovies.model.detail.MovieDetail;
 import com.udacity.popularmovies.utils.ApiUtils;
@@ -38,6 +46,7 @@ import butterknife.ButterKnife;
 
 public class DetailFragment extends Fragment {
 
+  private static final String TAG = "TAG_" + DetailFragment.class.getSimpleName();
   private static final String KEY_MOVIE_ID = "movie_id";
   private static final String KEY_POSITION = "position";
 
@@ -55,6 +64,8 @@ public class DetailFragment extends Fragment {
   TextView voteAverageView;
   @BindView(R.id.tv_overview)
   TextView overviewView;
+  @BindView(R.id.b_star)
+  Button starButton;
 
   @Inject
   MoviesViewModel viewModel;
@@ -98,7 +109,7 @@ public class DetailFragment extends Fragment {
     if (args != null && args.containsKey(KEY_MOVIE_ID) && args.containsKey(KEY_POSITION)) {
       final int movieId = args.getInt(KEY_MOVIE_ID);
       final int position = args.getInt(KEY_POSITION);
-      setPosterDimens();
+      setupPosterDimens();
       setupViewModel(movieId, position);
     } else {
       showError();
@@ -118,9 +129,77 @@ public class DetailFragment extends Fragment {
   }
 
   /**
-   * Return RecyclerView grid row height
+   * If movie is not starred set button to "Star", otherwise set button to "Unstar"
    */
-  private void setPosterDimens() {
+  private void setupStarButton(final MovieDetail movie) {
+    if (movie == null) {
+      throw new NullPointerException("Movie object is null");
+    }
+
+    // Find out if this movie is already starred
+
+    Cursor cursor = mainActivity.getContentResolver().query(
+        MovieEntry.CONTENT_URI,
+        null,
+        "movie_id=?",
+        new String[]{String.valueOf(movie.getId())},
+        null);
+    if (cursor == null) {
+      throw new SQLException("Failed to read database");
+    }
+
+    setupStarButtonCallback(movie, cursor);
+  }
+
+  private void setupStarButtonCallback(MovieDetail movie, Cursor cursor) {
+
+    // Setup button accordingly
+
+    if (cursor.getCount() == 0) {
+
+      // *** Unstarred ***
+
+      starButton.setText(R.string.star_button_text);
+      starButton.setOnClickListener(v -> {
+        // Add to favorites
+        // WARNING: Assumes the movie object is legit
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MovieEntry.COLUMN_TITLE, movie.getOriginalTitle());
+        contentValues.put(MovieEntry.COLUMN_MOVIE_ID, movie.getId());
+        Uri uri = mainActivity.getContentResolver().insert(MovieEntry.CONTENT_URI, contentValues);
+        if (uri != null) {
+          Log.d(TAG, "Starred: " + uri);
+        }
+        // Make star button great again
+        setupStarButton(movie);
+      });
+
+    } else {
+
+      // *** Starred ***
+
+      cursor.moveToNext();
+      int id = cursor.getInt(cursor.getColumnIndex(MovieEntry._ID));
+      starButton.setText(R.string.unstar_button_text);
+      starButton.setOnClickListener(v -> {
+        // Remove from favorites
+        int rowsRemoved = mainActivity.getContentResolver().delete(
+            ContentUris.withAppendedId(MovieEntry.CONTENT_URI, id),
+            null,
+            null);
+        Log.d(TAG, "Rows removed: " + rowsRemoved);
+        // Make star button great again
+        setupStarButton(movie);
+      });
+    }
+
+    cursor.close();
+  }
+
+  /**
+   * Set poster width and height
+   */
+  private void setupPosterDimens() {
     int displayWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
     int displayHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
     int widthRatio = getResources().getInteger(R.integer.poster_width_ratio);
@@ -167,6 +246,8 @@ public class DetailFragment extends Fragment {
     if (movie == null) {
       return;
     }
+
+    setupStarButton(movie);
 
     final String NOT_AVAILABLE = getString(R.string.not_available);
     String sTmp;

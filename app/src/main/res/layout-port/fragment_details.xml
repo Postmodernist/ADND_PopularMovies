@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -48,7 +47,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/colorText"
-                android:textSize="30sp"
+                android:textSize="@dimen/detail_text_size"
                 tools:text="2015" />
 
             <TextView
@@ -63,7 +62,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/colorText"
-                android:textSize="30sp"
+                android:textSize="@dimen/detail_text_size"
                 tools:text="120 min" />
 
             <TextView
@@ -78,8 +77,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/colorTextAccent"
-                android:textSize="30sp"
+                android:textSize="@dimen/detail_text_size"
                 tools:text="8.1/10" />
+
+            <Button
+                android:id="@+id/b_star"
+                style="?android:buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/application_spacing"
+                android:fontFamily="sans-serif-light"
+                android:textAllCaps="false"
+                android:textSize="@dimen/button_text_size"
+                tools:text="@string/star_button_text" />
+
         </LinearLayout>
 
         <TextView
@@ -103,6 +114,7 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/colorText"
                 tools:text="Every child comes into the world full of promise, and none more so than Chappie: he is gifted, special, a prodigy. Chappie he is a robot." />
+
         </ScrollView>
     </RelativeLayout>
 </FrameLayout>
