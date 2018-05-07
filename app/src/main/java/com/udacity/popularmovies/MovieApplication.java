@@ -6,12 +6,12 @@ import android.content.Context;
 import com.udacity.popularmovies.di.components.ApplicationComponent;
 import com.udacity.popularmovies.di.components.DaggerApplicationComponent;
 
-public class MoviesApplication extends Application {
+public class MovieApplication extends Application {
 
   private ApplicationComponent applicationComponent;
 
   public static ApplicationComponent getAppComponent(Context context) {
-    return ((MoviesApplication) context.getApplicationContext()).applicationComponent;
+    return ((MovieApplication) context.getApplicationContext()).applicationComponent;
   }
 
   @Override

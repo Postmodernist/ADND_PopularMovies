@@ -17,16 +17,16 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.udacity.popularmovies.MoviesApplication;
+import com.udacity.popularmovies.MovieApplication;
 import com.udacity.popularmovies.R;
 import com.udacity.popularmovies.activities.MainActivity;
-import com.udacity.popularmovies.adapters.MoviesAdapter;
+import com.udacity.popularmovies.adapters.MovieAdapter;
 import com.udacity.popularmovies.di.components.DaggerDiscoveryFragmentComponent;
 import com.udacity.popularmovies.di.components.DiscoveryFragmentComponent;
 import com.udacity.popularmovies.utils.ApiUtils;
 import com.udacity.popularmovies.utils.ConnectionUtils;
 import com.udacity.popularmovies.utils.EndlessRecyclerViewScrollListener;
-import com.udacity.popularmovies.viewmodels.MoviesViewModel;
+import com.udacity.popularmovies.viewmodels.MovieViewModel;
 
 import java.util.Objects;
 
@@ -47,9 +47,9 @@ public class DiscoveryFragment extends Fragment {
   ProgressBar progressBar;
 
   @Inject
-  MoviesViewModel viewModel;
+  MovieViewModel viewModel;
   @Inject
-  MoviesAdapter adapter;
+  MovieAdapter adapter;
 
   private DiscoveryFragmentComponent discoveryFragmentComponent;
   private MainActivity mainActivity;
@@ -97,7 +97,7 @@ public class DiscoveryFragment extends Fragment {
 
   private void setupDagger() {
     discoveryFragmentComponent = DaggerDiscoveryFragmentComponent.builder()
-        .appComponent(MoviesApplication.getAppComponent(Objects.requireNonNull(getContext())))
+        .appComponent(MovieApplication.getAppComponent(Objects.requireNonNull(getContext())))
         .fragment(this)
         .build();
     discoveryFragmentComponent.inject(this);
@@ -121,7 +121,7 @@ public class DiscoveryFragment extends Fragment {
 
   private void setupViewModel() {
     viewModel.init();
-    viewModel.getMoviesList().observe(this, adapter::submitList);
+    viewModel.getMovieList().observe(this, adapter::submitList);
     viewModel.getLoadingStatus().observe(this, this::updateViewsVisibility);
   }
 

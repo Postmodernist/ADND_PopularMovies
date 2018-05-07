@@ -2,9 +2,9 @@ package com.udacity.popularmovies.di.components;
 
 import android.app.Application;
 
-import com.udacity.popularmovies.MoviesApplication;
+import com.udacity.popularmovies.MovieApplication;
 import com.udacity.popularmovies.di.modules.ApplicationModule;
-import com.udacity.popularmovies.viewmodels.MoviesViewModelFactory;
+import com.udacity.popularmovies.viewmodels.MovieViewModelFactory;
 
 import javax.inject.Singleton;
 
@@ -15,9 +15,9 @@ import dagger.Component;
 @Singleton
 public interface ApplicationComponent {
 
-  void inject(MoviesApplication application);
+  void inject(MovieApplication application);
 
-  MoviesViewModelFactory moviesViewModelFactory();
+  MovieViewModelFactory moviesViewModelFactory();
 
   @Component.Builder
   interface Builder {

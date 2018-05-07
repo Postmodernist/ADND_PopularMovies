@@ -5,8 +5,8 @@ import android.arch.lifecycle.ViewModelProviders;
 import com.udacity.popularmovies.activities.MainActivity;
 import com.udacity.popularmovies.di.scopes.DetailFragmentScope;
 import com.udacity.popularmovies.fragments.DetailFragment;
-import com.udacity.popularmovies.viewmodels.MoviesViewModel;
-import com.udacity.popularmovies.viewmodels.MoviesViewModelFactory;
+import com.udacity.popularmovies.viewmodels.MovieViewModel;
+import com.udacity.popularmovies.viewmodels.MovieViewModelFactory;
 
 import dagger.Module;
 import dagger.Provides;
@@ -16,8 +16,8 @@ public class DetailFragmentModule {
 
   @Provides
   @DetailFragmentScope
-  MoviesViewModel provideMoviesViewModel(MainActivity mainActivity, MoviesViewModelFactory viewModelFactory) {
-    return ViewModelProviders.of(mainActivity, viewModelFactory).get(MoviesViewModel.class);
+  MovieViewModel provideMoviesViewModel(MainActivity mainActivity, MovieViewModelFactory viewModelFactory) {
+    return ViewModelProviders.of(mainActivity, viewModelFactory).get(MovieViewModel.class);
   }
 
   @Provides

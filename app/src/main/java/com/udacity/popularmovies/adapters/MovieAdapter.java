@@ -18,19 +18,19 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewHolder> {
+public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
 
   private List<MovieItem> moviesData;
   private MovieClickCallback clickCallback;
   private ViewGroup.LayoutParams itemLayoutParams;
 
   /**
-   * MoviesAdapter constructor
+   * MovieAdapter constructor
    *
    * @param clickCallback The on-click handler for this adapter.
    * @param itemHeight    The height of the items inflated by the adapter.
    */
-  public MoviesAdapter(int itemHeight, MovieClickCallback clickCallback) {
+  public MovieAdapter(int itemHeight, MovieClickCallback clickCallback) {
     itemLayoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, itemHeight);
     this.clickCallback = clickCallback;
   }

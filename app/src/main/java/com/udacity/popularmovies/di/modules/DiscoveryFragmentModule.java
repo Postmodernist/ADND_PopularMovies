@@ -8,11 +8,11 @@ import android.support.v7.widget.GridLayoutManager;
 
 import com.udacity.popularmovies.R;
 import com.udacity.popularmovies.activities.MainActivity;
-import com.udacity.popularmovies.adapters.MoviesAdapter;
+import com.udacity.popularmovies.adapters.MovieAdapter;
 import com.udacity.popularmovies.di.scopes.DiscoveryFragmentScope;
 import com.udacity.popularmovies.fragments.DiscoveryFragment;
-import com.udacity.popularmovies.viewmodels.MoviesViewModel;
-import com.udacity.popularmovies.viewmodels.MoviesViewModelFactory;
+import com.udacity.popularmovies.viewmodels.MovieViewModel;
+import com.udacity.popularmovies.viewmodels.MovieViewModelFactory;
 
 import javax.inject.Named;
 
@@ -24,8 +24,8 @@ public class DiscoveryFragmentModule {
 
   @Provides
   @DiscoveryFragmentScope
-  MoviesViewModel provideMoviesViewModel(MainActivity mainActivity, MoviesViewModelFactory viewModelFactory) {
-    return ViewModelProviders.of(mainActivity, viewModelFactory).get(MoviesViewModel.class);
+  MovieViewModel provideMoviesViewModel(MainActivity mainActivity, MovieViewModelFactory viewModelFactory) {
+    return ViewModelProviders.of(mainActivity, viewModelFactory).get(MovieViewModel.class);
   }
 
   @Provides
@@ -34,8 +34,8 @@ public class DiscoveryFragmentModule {
   }
 
   @Provides
-  MoviesAdapter provideMoviesAdapter(DiscoveryFragment fragment, MainActivity activity, @Named("row height") int rowHeight) {
-    return new MoviesAdapter(rowHeight, (movie, position) -> {
+  MovieAdapter provideMoviesAdapter(DiscoveryFragment fragment, MainActivity activity, @Named("row height") int rowHeight) {
+    return new MovieAdapter(rowHeight, (movie, position) -> {
       if (fragment.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
         activity.showMovieDetails(movie, position);
       }
