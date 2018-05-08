@@ -23,10 +23,10 @@ import com.udacity.popularmovies.activities.MainActivity;
 import com.udacity.popularmovies.adapters.MovieAdapter;
 import com.udacity.popularmovies.di.components.DaggerDiscoveryFragmentComponent;
 import com.udacity.popularmovies.di.components.DiscoveryFragmentComponent;
-import com.udacity.popularmovies.utils.ApiUtils;
 import com.udacity.popularmovies.utils.ConnectionUtils;
 import com.udacity.popularmovies.utils.EndlessRecyclerViewScrollListener;
 import com.udacity.popularmovies.viewmodels.MovieViewModel;
+import com.udacity.popularmovies.viewmodels.MovieViewModel.ListMode;
 
 import java.util.Objects;
 
@@ -82,12 +82,17 @@ public class DiscoveryFragment extends Fragment {
     setupViewModel();
 
     // Change title according to sort order
-    if (viewModel.getSortBy().equals(ApiUtils.SORT_BY_POPULARITY)) {
-      mainActivity.setTitle(getString(R.string.most_popular_title));
-    } else {
-      mainActivity.setTitle(getString(R.string.top_rated_title));
+    switch (viewModel.getListMode()) {
+      case MOST_POPULAR:
+        mainActivity.setTitle(getString(R.string.most_popular_title));
+        break;
+      case TOP_RATED:
+        mainActivity.setTitle(getString(R.string.top_rated_title));
+        break;
+      case STARRED:
+        mainActivity.setTitle(getString(R.string.starred_title));
+        break;
     }
-
   }
 
   private void setupDagger() {
@@ -161,28 +166,39 @@ public class DiscoveryFragment extends Fragment {
 
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
-    int id = item.getItemId();
-    if (id == R.id.action_refresh) {
-      viewModel.refresh();
-      refreshUi();
-      return true;
-    } else if (id == R.id.action_most_popular) {
-      Log.d(TAG, "Most popular sorting selected");
-      changeSortOrder(ApiUtils.SORT_BY_POPULARITY, R.string.most_popular_title);
-      return true;
-    } else if (id == R.id.action_top_rated) {
-      Log.d(TAG, "Top rated sorting selected");
-      changeSortOrder(ApiUtils.SORT_BY_RATING, R.string.top_rated_title);
-      return true;
+
+    switch (item.getItemId()) {
+
+      case R.id.action_refresh:
+        viewModel.refresh();
+        refreshUi();
+        return true;
+
+      case R.id.action_most_popular:
+        Log.d(TAG, "Most popular sorting selected");
+        setListMode(ListMode.MOST_POPULAR, R.string.most_popular_title);
+        return true;
+
+      case R.id.action_top_rated:
+        Log.d(TAG, "Top rated sorting selected");
+        setListMode(ListMode.TOP_RATED, R.string.top_rated_title);
+        return true;
+
+      case R.id.action_starred:
+        Log.d(TAG, "Starred movies selected");
+        setListMode(ListMode.STARRED, R.string.starred_title);
+        return true;
+
+      default:
+        return super.onOptionsItemSelected(item);
     }
-    return super.onOptionsItemSelected(item);
   }
 
   /**
-   * Change movies sorting order
+   * Change movies list mode
    */
-  private void changeSortOrder(String sortBy, int titleId) {
-    if (viewModel.setSortBy(sortBy)) {
+  private void setListMode(ListMode mode, int titleId) {
+    if (viewModel.setListMode(mode)) {
       mainActivity.setTitle(getString(titleId));
       refreshUi();
     }

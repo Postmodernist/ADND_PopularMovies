@@ -18,7 +18,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.udacity.popularmovies.api.MovieApi;
-import com.udacity.popularmovies.database.MovieContract;
+import com.udacity.popularmovies.database.MovieContract.MovieEntry;
 import com.udacity.popularmovies.di.qualifiers.DiskExecutor;
 import com.udacity.popularmovies.di.qualifiers.MainThreadExecutor;
 import com.udacity.popularmovies.di.qualifiers.NetworkExecutor;
@@ -27,6 +27,7 @@ import com.udacity.popularmovies.model.discover.MovieItem;
 import com.udacity.popularmovies.model.discover.MoviePage;
 import com.udacity.popularmovies.utils.ApiUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -82,7 +83,7 @@ public final class MovieRepository {
                              @NonNull Response<MoviePage> response) {
         if (response.isSuccessful()) {
           MoviePage moviePage = response.body();
-          liveMoviesPage.setValue(moviePage != null ? moviePage.getResults() : null);
+          liveMoviesPage.postValue(moviePage != null ? moviePage.getResults() : null);
           Log.d(TAG, "Finished loading page " + page);
         } else {
           Log.d(TAG, "Failed to load page " + page + ". Error code: " + response.code());
@@ -97,6 +98,66 @@ public final class MovieRepository {
         liveLoadingStatus.postValue(false);
       }
     }));
+  }
+
+  public void loadStarred(final int lastMovieId, final int pageSize) {
+    liveLoadingStatus.setValue(true);
+    diskExecutor.execute(() -> {
+
+      // Get database id of the last loaded movie
+
+      int id;
+
+      if (lastMovieId == -1) {
+        // First page
+        id = lastMovieId;
+      } else {
+        try (Cursor cursor = application.getContentResolver().query(
+            MovieEntry.CONTENT_URI,
+            new String[]{MovieEntry._ID},
+            MovieEntry.COLUMN_MOVIE_ID + " = ?",
+            new String[]{String.valueOf(lastMovieId)},
+            null)) {
+          if (cursor != null) {
+            if (cursor.moveToNext()) {
+              id = cursor.getInt(cursor.getColumnIndex(MovieEntry._ID));
+            } else {
+              throw new IllegalArgumentException("Movie not found in star database: " + lastMovieId);
+            }
+          } else {
+            throw new SQLException("Failed to read database");
+          }
+        }
+      }
+
+      // Query next page
+
+      final Uri uri = MovieEntry.CONTENT_URI.buildUpon()
+          .appendQueryParameter("limit", String.valueOf(pageSize))
+          .build();
+
+      try (Cursor cursor = application.getContentResolver().query(
+          uri,
+          null,
+          MovieEntry._ID + " > ?",
+          new String[]{String.valueOf(id)},
+          MovieEntry._ID)) {
+        if (cursor != null) {
+          Log.d(TAG, "Rows returned: " + cursor.getCount());
+          List<MovieItem> movies = new ArrayList<>(pageSize);
+          while (cursor.moveToNext()) {
+            Integer movieId = cursor.getInt(cursor.getColumnIndex(MovieEntry.COLUMN_MOVIE_ID));
+            String posterPath = cursor.getString(cursor.getColumnIndex(MovieEntry.COLUMN_POSTER_PATH));
+            String title = cursor.getString(cursor.getColumnIndex(MovieEntry.COLUMN_TITLE));
+            movies.add(new MovieItem(movieId, posterPath, title));
+          }
+          liveMoviesPage.postValue(movies);
+        } else {
+          throw new SQLException("Failed to read database");
+        }
+        liveLoadingStatus.postValue(false);
+      }
+    });
   }
 
   public LiveData<List<MovieItem>> getMoviesPage() {
@@ -119,7 +180,7 @@ public final class MovieRepository {
       public void onResponse(@NonNull Call<MovieDetail> call,
                              @NonNull Response<MovieDetail> response) {
         if (response.isSuccessful()) {
-          liveMovieDetail.setValue(response.body());
+          liveMovieDetail.postValue(response.body());
           Log.d(TAG, "Finished loading movie detail, movie_id " + movieId);
         } else {
           Log.d(TAG, "Failed to load movie detail, movie_id " + movieId + ". Error code: " + response.code());
@@ -143,9 +204,9 @@ public final class MovieRepository {
     runWithCallback(() -> {
       Log.d(TAG, "Reading from star database: movie_id " + movie.getId());
       Cursor cursor = application.getContentResolver().query(
-          MovieContract.MovieEntry.CONTENT_URI,
+          MovieEntry.CONTENT_URI,
           null,
-          "movie_id=?",
+          MovieEntry.COLUMN_MOVIE_ID + " = ?",
           new String[]{String.valueOf(movie.getId())},
           null);
       if (cursor == null) {
@@ -161,9 +222,10 @@ public final class MovieRepository {
       // WARNING: Assumes the movie object is legit
       Log.d(TAG, "Starring movie, movie_id " + movie.getId());
       ContentValues contentValues = new ContentValues();
-      contentValues.put(MovieContract.MovieEntry.COLUMN_TITLE, movie.getOriginalTitle());
-      contentValues.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movie.getId());
-      Uri uri = application.getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI, contentValues);
+      contentValues.put(MovieEntry.COLUMN_MOVIE_ID, movie.getId());
+      contentValues.put(MovieEntry.COLUMN_POSTER_PATH, movie.getPosterPath());
+      contentValues.put(MovieEntry.COLUMN_TITLE, movie.getOriginalTitle());
+      Uri uri = application.getContentResolver().insert(MovieEntry.CONTENT_URI, contentValues);
       if (uri != null) {
         Log.d(TAG, "Starred: " + uri);
         return ContentUris.parseId(uri);
@@ -172,12 +234,12 @@ public final class MovieRepository {
     }, callback, "Failed to write to database");
   }
 
-  /** Remove starred movie from local star db */
+  /** Remove starred movie from local star database */
   public void unstarMovie(long id, UnstarCallback callback) {
     runWithCallback(() -> {
       Log.d(TAG, "Unstarring movie, database_id " + id);
       int rowsRemoved = application.getContentResolver().delete(
-          ContentUris.withAppendedId(MovieContract.MovieEntry.CONTENT_URI, id),
+          ContentUris.withAppendedId(MovieEntry.CONTENT_URI, id),
           null,
           null);
       Log.d(TAG, "Rows removed: " + rowsRemoved);

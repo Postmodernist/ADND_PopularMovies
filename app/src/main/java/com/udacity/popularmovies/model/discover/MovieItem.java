@@ -26,6 +26,12 @@ public class MovieItem {
   @Expose
   private String releaseDate;
 
+  public MovieItem(Integer id, String posterPath, String originalTitle) {
+    this.id = id;
+    this.posterPath = posterPath;
+    this.originalTitle = originalTitle;
+  }
+
   public Integer getId() {
     return id;
   }

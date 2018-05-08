@@ -3,11 +3,13 @@
     <string name="app_name">Popular Movies</string>
     <string name="most_popular_title">Popular Movies</string>
     <string name="top_rated_title">Top Rated Movies</string>
+    <string name="starred_title">Starred Movies</string>
     <string name="no_connection">Movies data is not available.\nTry again by clicking Refresh.</string>
     <string name="poster_description">Movie poster</string>
     <string name="menu_refresh">Refresh</string>
     <string name="menu_most_popular">Most popular</string>
     <string name="menu_top_rated">Top rated</string>
+    <string name="menu_starred">Starred</string>
     <string name="release_year_label">Release year</string>
     <string name="runtime_label">Runtime</string>
     <string name="user_score_label">User score</string>

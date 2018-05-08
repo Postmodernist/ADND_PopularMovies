@@ -6,8 +6,8 @@ import android.arch.lifecycle.Transformations;
 import android.arch.lifecycle.ViewModel;
 import android.content.SharedPreferences;
 import android.support.annotation.StringRes;
-import android.text.TextUtils;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 
 import com.udacity.popularmovies.R;
@@ -23,31 +23,35 @@ import java.util.List;
 public class MovieViewModel extends ViewModel {
 
   private static final String TAG = "TAG_" + MovieViewModel.class.getSimpleName();
-  private static final String SORT_ORDER_KEY = "SORT_ORDER";
+  private static final String LIST_MODE_KEY = "LIST_MODE";
   private static final int STARTING_PAGE = 1;
+  private static final int PAGE_SIZE = 20;
 
   private MovieRepository movieRepo;
   private SharedPreferences sharedPrefs;
+
   private boolean isInitialized = false;
 
   // Movie list
   private LiveData<List<MovieItem>> liveMovieList;
   private MediatorLiveData<Boolean> liveLoadingStatus = new MediatorLiveData<>();
   private List<MovieItem> movieList = new ArrayList<>();
+  private int listSize;  // for starred list updating
+  private ListMode listMode;
   private int page = STARTING_PAGE;
-  private String sortBy;
+  private int lastLoadedMovieId = -1;  // for starred list paging
 
   // Movie detail
   private MediatorLiveData<MovieDetail> liveMovieDetail = new MediatorLiveData<>();
-  private int lastMovieId;
-
-  // -----------------------------------------------------------------------------------------------
-  // Constructor and initializer
+  private int lastViewedMovieId;
 
   MovieViewModel(MovieRepository movieRepo, SharedPreferences sharedPrefs) {
     this.movieRepo = movieRepo;
     this.sharedPrefs = sharedPrefs;
   }
+
+  // -----------------------------------------------------------------------------------------------
+  // Constructor and initializer
 
   public void init() {
     if (isInitialized) {
@@ -58,13 +62,24 @@ public class MovieViewModel extends ViewModel {
     liveMovieList = Transformations.map(movieRepo.getMoviesPage(), movies -> {
       if (movies != null) {
         movieList.addAll(movies);
-        ++page;
+        switch (listMode) {
+          case MOST_POPULAR:
+            // Fall through
+          case TOP_RATED:
+            ++page;
+            break;
+          case STARRED:
+            if (movies.size() > 0) {
+              lastLoadedMovieId = movies.get(movies.size() - 1).getId();
+            }
+            break;
+        }
       }
       return movieList;
     });
     liveLoadingStatus.addSource(movieRepo.getLoadingStatus(), liveLoadingStatus::setValue);
     liveMovieDetail.addSource(movieRepo.getMovieDetail(), liveMovieDetail::setValue);
-    sortBy = sharedPrefs.getString(SORT_ORDER_KEY, ApiUtils.SORT_BY_POPULARITY);
+    listMode = ListMode.fromId(sharedPrefs.getInt(LIST_MODE_KEY, ListMode.MOST_POPULAR.id));
     loadMore();
   }
 
@@ -75,11 +90,28 @@ public class MovieViewModel extends ViewModel {
     Log.d(TAG, "Reloading movies");
     movieList.clear();
     page = STARTING_PAGE;
+    lastLoadedMovieId = -1;
     loadMore();
   }
 
+  private void refreshStarred() {
+    Log.d(TAG, "Reloading starred movies");
+    movieList.clear();
+    movieRepo.loadStarred(-1, listSize);
+  }
+
   public void loadMore() {
-    movieRepo.loadMoviesPage(sortBy, page);
+    switch (listMode) {
+      case MOST_POPULAR:
+        movieRepo.loadMoviesPage(ApiUtils.SORT_BY_POPULARITY, page);
+        break;
+      case TOP_RATED:
+        movieRepo.loadMoviesPage(ApiUtils.SORT_BY_RATING, page);
+        break;
+      case STARRED:
+        movieRepo.loadStarred(lastLoadedMovieId, PAGE_SIZE);
+        break;
+    }
   }
 
   public LiveData<List<MovieItem>> getMovieList() {
@@ -90,31 +122,31 @@ public class MovieViewModel extends ViewModel {
     return liveLoadingStatus;
   }
 
-  public String getSortBy() {
-    return sortBy;
+  public ListMode getListMode() {
+    return listMode;
   }
 
-  public boolean setSortBy(String sortBy) {
-    if (TextUtils.equals(this.sortBy, sortBy)) {
+  public boolean setListMode(ListMode listMode) {
+    if (this.listMode == listMode) {
       return false;
     }
-    this.sortBy = sortBy;
-    sharedPrefs.edit().putString(SORT_ORDER_KEY, sortBy).apply();
+    this.listMode = listMode;
+    sharedPrefs.edit().putInt(LIST_MODE_KEY, listMode.id).apply();
     refresh();
     return true;
   }
 
-  // -----------------------------------------------------------------------------------------------
-  // Movie detail
-
   public LiveData<MovieDetail> getMovieDetail(int movieId, int position) {
-    if (lastMovieId != movieId) {
-      lastMovieId = movieId;
+    if (lastViewedMovieId != movieId) {
+      lastViewedMovieId = movieId;
       liveMovieDetail.setValue(new MovieDetail(movieList.get(position)));
       movieRepo.loadMovieDetail(movieId);
     }
     return liveMovieDetail;
   }
+
+  // -----------------------------------------------------------------------------------------------
+  // Movie detail
 
   /** Check local db if this movie is starred */
   public void initStarButton(MovieDetail movie, Runnable disableStarCallback,
@@ -129,6 +161,8 @@ public class MovieViewModel extends ViewModel {
       Log.d(TAG, id != -1 ? "Movie is starred, database_id " + id : "Movie is NOT starred");
       setupStarButton(movie, disableStarCallback, enableStarCallback, id);
     });
+    // Save movie list size
+    listSize = movieList.size();
   }
 
   /** Switch between starred/unstarred */
@@ -145,6 +179,10 @@ public class MovieViewModel extends ViewModel {
         movieRepo.starMovie(movie, newId -> {
           // Make star button great again
           setupStarButton(movie, disableStarCallback, enableStarCallback, newId);
+          // Refresh starred movies list
+          if (listMode == ListMode.STARRED) {
+            refreshStarred();
+          }
         });
       });
     } else {
@@ -158,8 +196,35 @@ public class MovieViewModel extends ViewModel {
         movieRepo.unstarMovie(id, w -> {
           // Make star button great again
           setupStarButton(movie, disableStarCallback, enableStarCallback, -1);
+          // Refresh starred movies list
+          if (listMode == ListMode.STARRED) {
+            refreshStarred();
+          }
         });
       });
+    }
+  }
+
+  public enum ListMode {
+    MOST_POPULAR(0), TOP_RATED(1), STARRED(2);
+
+    private static final SparseArray<ListMode> valuesById;
+
+    static {
+      valuesById = new SparseArray<>(values().length);
+      for (ListMode value : values()) {
+        valuesById.put(value.id, value);
+      }
+    }
+
+    public final int id;
+
+    ListMode(int id) {
+      this.id = id;
+    }
+
+    public static ListMode fromId(Integer id) {
+      return valuesById.get(id);
     }
   }
 
