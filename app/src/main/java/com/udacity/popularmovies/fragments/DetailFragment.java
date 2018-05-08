@@ -2,13 +2,13 @@ package com.udacity.popularmovies.fragments;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
@@ -28,7 +28,6 @@ import com.udacity.popularmovies.di.components.DaggerDetailFragmentComponent;
 import com.udacity.popularmovies.model.detail.MovieDetail;
 import com.udacity.popularmovies.utils.ApiUtils;
 import com.udacity.popularmovies.viewmodels.MovieViewModel;
-import com.udacity.popularmovies.viewmodels.MovieViewModelFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -48,22 +47,14 @@ public class DetailFragment extends Fragment {
   private static final String KEY_MOVIE_ID = "movie_id";
   private static final String KEY_POSITION = "position";
 
-  @BindView(R.id.tv_error)
-  TextView errorView;
-  @BindView(R.id.movie_detail_layout)
-  RelativeLayout movieDetailLayout;
-  @BindView(R.id.iv_poster)
-  ImageView posterView;
-  @BindView(R.id.tv_release_date)
-  TextView releaseDateView;
-  @BindView(R.id.tv_runtime)
-  TextView runtimeView;
-  @BindView(R.id.tv_vote_average)
-  TextView voteAverageView;
-  @BindView(R.id.tv_overview)
-  TextView overviewView;
-  @BindView(R.id.b_star)
-  Button starButton;
+  @BindView(R.id.tv_error) TextView errorView;
+  @BindView(R.id.movie_detail_layout) RelativeLayout movieDetailLayout;
+  @BindView(R.id.iv_poster) ImageView posterView;
+  @BindView(R.id.tv_release_date) TextView releaseDateView;
+  @BindView(R.id.tv_runtime) TextView runtimeView;
+  @BindView(R.id.tv_vote_average) TextView voteAverageView;
+  @BindView(R.id.tv_overview) TextView overviewView;
+  @BindView(R.id.b_star) Button starButton;
 
   @Inject MovieViewModel viewModel;
 
@@ -134,21 +125,28 @@ public class DetailFragment extends Fragment {
    * If movie is not starred set button to "Star", otherwise set button to "Unstar"
    */
   private void setupStarButton(MovieDetail movie) {
-    Log.d(TAG, "--> setupStarButton()");
-
     if (movie == null) {
       Log.e(TAG, "Movie object is null");
       return;
     }
 
-    // This function only needs to be called once per fragment, so unsubscribe
+    // This function only needs to be called once, so unsubscribe
     movieDetailLiveData.removeObserver(starObserver);
+    disableStarButton();
 
     // Forward the rest to ViewModel
-    viewModel.initStarButton(movie, (text, onClickListener) -> {
-      starButton.setText(text);
-      starButton.setOnClickListener(onClickListener);
-    });
+    viewModel.initStarButton(movie, this::disableStarButton, this::enableStarButton);
+  }
+
+  private void enableStarButton(@StringRes int text, View.OnClickListener onClickListener) {
+    starButton.setText(text);
+    starButton.setTextColor(getResources().getColor(R.color.colorAccent));
+    starButton.setOnClickListener(onClickListener);
+  }
+
+  private void disableStarButton() {
+    starButton.setOnClickListener(null);
+    starButton.setTextColor(getResources().getColor(R.color.colorTextLabel));
   }
 
   /**

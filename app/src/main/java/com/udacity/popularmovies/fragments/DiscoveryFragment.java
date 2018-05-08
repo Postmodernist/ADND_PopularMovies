@@ -39,17 +39,12 @@ public class DiscoveryFragment extends Fragment {
 
   private static final String TAG = "TAG_" + DiscoveryFragment.class.getSimpleName();
 
-  @BindView(R.id.rv_movies)
-  RecyclerView moviesView;
-  @BindView(R.id.tv_error)
-  TextView errorView;
-  @BindView(R.id.pb_loading)
-  ProgressBar progressBar;
+  @BindView(R.id.rv_movies) RecyclerView moviesView;
+  @BindView(R.id.tv_error) TextView errorView;
+  @BindView(R.id.pb_loading) ProgressBar progressBar;
 
-  @Inject
-  MovieViewModel viewModel;
-  @Inject
-  MovieAdapter adapter;
+  @Inject MovieViewModel viewModel;
+  @Inject MovieAdapter adapter;
 
   private DiscoveryFragmentComponent discoveryFragmentComponent;
   private MainActivity mainActivity;

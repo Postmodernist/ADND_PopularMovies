@@ -5,7 +5,6 @@ import android.arch.lifecycle.MediatorLiveData;
 import android.arch.lifecycle.Transformations;
 import android.arch.lifecycle.ViewModel;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.support.annotation.StringRes;
 import android.text.TextUtils;
 import android.util.Log;
@@ -41,7 +40,6 @@ public class MovieViewModel extends ViewModel {
   // Movie detail
   private MediatorLiveData<MovieDetail> liveMovieDetail = new MediatorLiveData<>();
   private int lastMovieId;
-  private volatile boolean starLock = false;
 
   // -----------------------------------------------------------------------------------------------
   // Constructor and initializer
@@ -119,45 +117,54 @@ public class MovieViewModel extends ViewModel {
   }
 
   /** Check local db if this movie is starred */
-  public void initStarButton(MovieDetail movie, StarButtonCallback callback) {
-    long id = -1;
-    try (Cursor cursor = movieRepo.getStarredMovie(movie)) {
+  public void initStarButton(MovieDetail movie, Runnable disableStarCallback,
+                             EnableStarCallback enableStarCallback) {
+    Log.d(TAG, "Initializing Star button...");
+    movieRepo.getStarredMovie(movie, cursor -> {
+      long id = -1;
       if (cursor.getCount() == 1) {
         cursor.moveToNext();
         id = cursor.getInt(cursor.getColumnIndex(MovieContract.MovieEntry._ID));
       }
-    }
-    setupStarButton(movie, callback, id);
+      Log.d(TAG, id != -1 ? "Movie is starred, database_id " + id : "Movie is NOT starred");
+      setupStarButton(movie, disableStarCallback, enableStarCallback, id);
+    });
   }
 
   /** Switch between starred/unstarred */
-  private void setupStarButton(MovieDetail movie, StarButtonCallback callback, final long id) {
+  private void setupStarButton(MovieDetail movie, Runnable disableStarCallback,
+                               EnableStarCallback enableStarCallback, final long id) {
     if (id == -1) {
 
       // *** Not starred ***
 
-      callback.run(R.string.star_button_text, v -> {
+      enableStarCallback.run(R.string.star_button_text, v -> {
+        // Disable star button
+        disableStarCallback.run();
         // Add to favorites
-        final long newId = movieRepo.starMovie(movie);
-        // Make star button great again
-        setupStarButton(movie, callback, newId);
+        movieRepo.starMovie(movie, newId -> {
+          // Make star button great again
+          setupStarButton(movie, disableStarCallback, enableStarCallback, newId);
+        });
       });
-
     } else {
 
       // *** Starred ***
 
-      callback.run(R.string.unstar_button_text, v -> {
+      enableStarCallback.run(R.string.unstar_button_text, v -> {
+        // Disable star button
+        disableStarCallback.run();
         // Remove from favorites
-        movieRepo.unstarMovie(id);
-        // Make star button great again
-        setupStarButton(movie, callback, -1);
+        movieRepo.unstarMovie(id, w -> {
+          // Make star button great again
+          setupStarButton(movie, disableStarCallback, enableStarCallback, -1);
+        });
       });
     }
   }
 
-  /** Callback interface to modify UI when the star state changes */
-  public interface StarButtonCallback {
+  /** Callback to modify UI when the star state changes */
+  public interface EnableStarCallback {
     void run(@StringRes int text, View.OnClickListener onClickListener);
   }
 }
