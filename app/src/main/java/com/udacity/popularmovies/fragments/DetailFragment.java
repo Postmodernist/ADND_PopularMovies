@@ -145,8 +145,8 @@ public class DetailFragment extends Fragment {
   }
 
   private void disableStarButton() {
-    starButton.setOnClickListener(null);
     starButton.setTextColor(getResources().getColor(R.color.colorTextLabel));
+    starButton.setOnClickListener(null);
   }
 
   /**

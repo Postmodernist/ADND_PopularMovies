@@ -3,8 +3,6 @@ package com.udacity.popularmovies.model.discover;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.List;
-
 public class MovieItem {
 
   @SerializedName("id")
@@ -26,10 +24,13 @@ public class MovieItem {
   @Expose
   private String releaseDate;
 
-  public MovieItem(Integer id, String posterPath, String originalTitle) {
+  public MovieItem(Integer id, Double voteAverage, String posterPath, String originalTitle, String overview, String releaseDate) {
     this.id = id;
+    this.voteAverage = voteAverage;
     this.posterPath = posterPath;
     this.originalTitle = originalTitle;
+    this.overview = overview;
+    this.releaseDate = releaseDate;
   }
 
   public Integer getId() {
