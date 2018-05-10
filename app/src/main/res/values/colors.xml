@@ -6,5 +6,6 @@
     <color name="colorText">#505050</color>
     <color name="colorTextLabel">#A0A0A0</color>
     <color name="colorTextAccent">#000000</color>
+    <color name="colorTextDisabled">#C0C0C0</color>
     <color name="colorDivider">#E0E0E0</color>
 </resources>

@@ -65,19 +65,15 @@ public final class ApiUtils {
     return options;
   }
 
-  /**
-   * Build query options for movie detail query
-   */
+  /** Build query options for movie detail query */
   public static Map<String, String> detailQueryOptions() {
-    Map<String, String> options = new ArrayMap<>(7);
+    Map<String, String> options = new ArrayMap<>(2);
     options.put(API_KEY_PARAM, api_key);
     options.put(LANGUAGE_PARAM, language);
     return options;
   }
 
-  /**
-   * Build poster URL
-   */
+  /** Build poster URL */
   @NonNull
   public static String posterUrl(String posterPath) {
     return posterPath != null ?

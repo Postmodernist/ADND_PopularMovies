@@ -1,120 +1,150 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="@dimen/application_margin">
+    android:clipToPadding="false"
+    android:padding="@dimen/application_margin"
+    android:scrollbarStyle="outsideOverlay">
 
-    <TextView
-        android:id="@+id/tv_error"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:text="@string/no_info"
-        android:textSize="@dimen/error_text_size"
-        android:visibility="invisible" />
-
-    <RelativeLayout
-        android:id="@+id/movie_detail_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <ImageView
-            android:id="@+id/iv_poster"
-            android:layout_width="160dp"
-            android:layout_height="240dp"
-            android:contentDescription="@string/poster_description"
-            android:scaleType="centerCrop"
-            tools:background="#B0B0B0" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/application_margin"
-            android:layout_marginStart="@dimen/application_margin"
-            android:layout_toEndOf="@id/iv_poster"
-            android:layout_toRightOf="@id/iv_poster"
-            android:orientation="vertical">
-
-            <TextView
-                style="@style/text_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/release_year_label" />
-
-            <TextView
-                android:id="@+id/tv_release_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/colorText"
-                android:textSize="@dimen/detail_text_size"
-                tools:text="2015" />
-
-            <TextView
-                style="@style/text_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/application_spacing"
-                android:text="@string/runtime_label" />
-
-            <TextView
-                android:id="@+id/tv_runtime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/colorText"
-                android:textSize="@dimen/detail_text_size"
-                tools:text="120 min" />
-
-            <TextView
-                style="@style/text_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/application_spacing"
-                android:text="@string/user_score_label" />
-
-            <TextView
-                android:id="@+id/tv_vote_average"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/colorTextAccent"
-                android:textSize="@dimen/detail_text_size"
-                tools:text="8.1/10" />
-
-            <Button
-                android:id="@+id/b_star"
-                style="?android:buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/application_spacing"
-                android:fontFamily="sans-serif-light"
-                android:textAllCaps="false"
-                android:textSize="@dimen/button_text_size"
-                tools:text="@string/star_button_text" />
-
-        </LinearLayout>
+        android:layout_height="wrap_content">
 
         <TextView
-            android:id="@+id/tv_overview_label"
-            style="@style/text_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/iv_poster"
-            android:layout_marginTop="@dimen/application_margin"
-            android:text="@string/overview_label" />
-
-        <ScrollView
+            android:id="@+id/tv_error"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@id/tv_overview_label"
-            android:layout_marginTop="@dimen/application_spacing">
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="@string/no_info"
+            android:textSize="@dimen/error_text_size"
+            android:visibility="invisible" />
+
+        <RelativeLayout
+            android:id="@+id/movie_detail_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/iv_poster"
+                android:layout_width="160dp"
+                android:layout_height="240dp"
+                android:layout_marginEnd="@dimen/application_margin"
+                android:layout_marginRight="@dimen/application_margin"
+                android:contentDescription="@string/poster_description"
+                android:scaleType="centerCrop"
+                tools:background="#B0B0B0" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/iv_poster"
+                android:layout_toRightOf="@id/iv_poster"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/text_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/release_year_label" />
+
+                <TextView
+                    android:id="@+id/tv_release_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colorText"
+                    android:textSize="@dimen/detail_text_size"
+                    tools:text="2015" />
+
+                <TextView
+                    style="@style/text_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/application_spacing"
+                    android:text="@string/runtime_label" />
+
+                <TextView
+                    android:id="@+id/tv_runtime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colorText"
+                    android:textSize="@dimen/detail_text_size"
+                    tools:text="120 min" />
+
+                <TextView
+                    style="@style/text_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/application_spacing"
+                    android:text="@string/user_score_label" />
+
+                <TextView
+                    android:id="@+id/tv_vote_average"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colorTextAccent"
+                    android:textSize="@dimen/detail_text_size"
+                    tools:text="8.1/10" />
+
+                <Button
+                    android:id="@+id/b_star"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/application_spacing"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:drawableLeft="@drawable/ic_star_disabled"
+                    android:drawablePadding="@dimen/application_spacing"
+                    android:drawableStart="@drawable/ic_star_disabled"
+                    android:fontFamily="sans-serif"
+                    android:paddingEnd="@dimen/application_spacing"
+                    android:paddingStart="@dimen/application_spacing"
+                    android:text="@string/star_button_text"
+                    android:textColor="@color/colorText"
+                    android:textSize="@dimen/button_text_size" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_overview_label"
+                style="@style/text_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/iv_poster"
+                android:layout_marginTop="@dimen/application_margin"
+                android:text="@string/overview_label" />
 
             <TextView
                 android:id="@+id/tv_overview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_below="@id/tv_overview_label"
+                android:layout_marginTop="@dimen/application_spacing"
                 android:textColor="@color/colorText"
                 tools:text="Every child comes into the world full of promise, and none more so than Chappie: he is gifted, special, a prodigy. Chappie he is a robot." />
 
-        </ScrollView>
-    </RelativeLayout>
-</FrameLayout>
+            <TextView
+                android:id="@+id/trailers_label"
+                style="@style/text_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_overview"
+                android:layout_marginTop="@dimen/application_margin"
+                android:text="@string/trailers_label" />
+
+            <LinearLayout
+                android:id="@+id/trailers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/trailers_label"
+                android:divider="?android:listDivider"
+                android:orientation="vertical"
+                android:showDividers="middle" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_below="@id/trailers" />
+
+        </RelativeLayout>
+    </FrameLayout>
+</ScrollView>

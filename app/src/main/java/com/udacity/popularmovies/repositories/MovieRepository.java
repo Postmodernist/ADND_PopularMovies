@@ -17,6 +17,8 @@ import com.udacity.popularmovies.di.qualifiers.DiskExecutor;
 import com.udacity.popularmovies.di.qualifiers.MainThreadExecutor;
 import com.udacity.popularmovies.di.qualifiers.NetworkExecutor;
 import com.udacity.popularmovies.model.detail.MovieDetail;
+import com.udacity.popularmovies.model.detail.MovieVideo;
+import com.udacity.popularmovies.model.detail.MovieVideos;
 import com.udacity.popularmovies.model.discover.MovieItem;
 import com.udacity.popularmovies.model.discover.MoviePage;
 import com.udacity.popularmovies.utils.ApiUtils;
@@ -56,24 +58,35 @@ public final class MovieRepository {
   private MutableLiveData<List<MovieItem>> liveMoviesPage = new MutableLiveData<>();
   private MutableLiveData<Boolean> liveLoadingStatus = new MutableLiveData<>();
   private MutableLiveData<MovieDetail> liveMovieDetail = new MutableLiveData<>();
+  private MutableLiveData<List<MovieVideo>> liveMovieVideos = new MutableLiveData<>();
 
   @Inject
   MovieRepository() {
     liveLoadingStatus.setValue(false);
   }
 
-  // -----------------------------------------------------------------------------------------------
-  // Movies list
+  public LiveData<List<MovieItem>> getMoviesPage() {
+    return liveMoviesPage;
+  }
+
+  public LiveData<Boolean> getLoadingStatus() {
+    return liveLoadingStatus;
+  }
+
+  public LiveData<MovieDetail> getMovieDetail() {
+    return liveMovieDetail;
+  }
+
+  public LiveData<List<MovieVideo>> getMovieVideos() {
+    return liveMovieVideos;
+  }
 
   public void loadMoviesPage(String sortBy, int page) {
-    Call<MoviePage> discoverApiCall =
-        movieApi.getMovies(ApiUtils.discoveryQueryOptions(sortBy, page));
+    Call<MoviePage> call = movieApi.getMovies(ApiUtils.discoveryQueryOptions(sortBy, page));
     liveLoadingStatus.setValue(true);
-    networkExecutor.execute(() -> discoverApiCall.enqueue(new Callback<MoviePage>() {
-
+    networkExecutor.execute(() -> call.enqueue(new Callback<MoviePage>() {
       @Override
-      public void onResponse(@NonNull Call<MoviePage> call,
-                             @NonNull Response<MoviePage> response) {
+      public void onResponse(@NonNull Call<MoviePage> call, @NonNull Response<MoviePage> response) {
         if (response.isSuccessful()) {
           MoviePage moviePage = response.body();
           liveMoviesPage.postValue(moviePage != null ? moviePage.getResults() : null);
@@ -85,45 +98,63 @@ public final class MovieRepository {
       }
 
       @Override
-      public void onFailure(@NonNull Call<MoviePage> call,
-                            @NonNull Throwable t) {
-        Log.d(TAG, "Failed to load page " + page);
+      public void onFailure(@NonNull Call<MoviePage> call, @NonNull Throwable t) {
+        Log.d(TAG, "Failed to load page " + page + ". Call " + call.toString());
         liveLoadingStatus.postValue(false);
       }
     }));
   }
 
+  public void loadMovieDetail(int movieId) {
+    Call<MovieDetail> call = movieApi.getMovieDetail(movieId, ApiUtils.detailQueryOptions());
+    networkExecutor.execute(() -> call.enqueue(new Callback<MovieDetail>() {
+      @Override
+      public void onResponse(@NonNull Call<MovieDetail> call, @NonNull Response<MovieDetail> response) {
+        if (response.isSuccessful()) {
+          liveMovieDetail.postValue(response.body());
+          Log.d(TAG, "Finished loading movie detail, movie_id " + movieId);
+        } else {
+          Log.d(TAG, "Failed to load movie detail, movie_id " + movieId + ". Error code: " + response.code());
+        }
+      }
+
+      @Override
+      public void onFailure(@NonNull Call<MovieDetail> call, @NonNull Throwable t) {
+        Log.d(TAG, "Failed to load movie detail, call " + call.toString());
+      }
+    }));
+  }
+
+  public void loadMovieVideos(int movieId) {
+    Call<MovieVideos> call = movieApi.getMovieVideos(movieId, ApiUtils.detailQueryOptions());
+    networkExecutor.execute(() -> call.enqueue(new Callback<MovieVideos>() {
+      @Override
+      public void onResponse(@NonNull Call<MovieVideos> call, @NonNull Response<MovieVideos> response) {
+        if (response.isSuccessful()) {
+          MovieVideos movieVideos = response.body();
+          liveMovieVideos.postValue(movieVideos != null ? movieVideos.getResults() : null);
+          Log.d(TAG, "Finished loading movie videos, movie_id " + movieId);
+        } else {
+          Log.d(TAG, "Failed to load movie videos, movie_id " + movieId + ". Error code: " + response.code());
+        }
+      }
+
+      @Override
+      public void onFailure(@NonNull Call<MovieVideos> call, @NonNull Throwable t) {
+        Log.d(TAG, "Failed to load movie videos, call " + call.toString());
+      }
+    }));
+  }
+
+  // -----------------------------------------------------------------------------------------------
+  // Stars
+
+  /** Load a page of starred movies starting from movie with lastMovieId */
   public void loadStarred(final int lastMovieId, final int pageSize) {
     liveLoadingStatus.setValue(true);
     diskExecutor.execute(() -> {
 
-      // Get database id of the last loaded movie
-
-      int id;
-
-      if (lastMovieId == -1) {
-        // First page
-        id = lastMovieId;
-      } else {
-        try (Cursor cursor = application.getContentResolver().query(
-            MovieEntry.CONTENT_URI,
-            new String[]{MovieEntry._ID},
-            MovieEntry.COLUMN_MOVIE_ID + " = ?",
-            new String[]{String.valueOf(lastMovieId)},
-            null)) {
-          if (cursor != null) {
-            if (cursor.moveToNext()) {
-              id = cursor.getInt(cursor.getColumnIndex(MovieEntry._ID));
-            } else {
-              throw new IllegalArgumentException("Movie not found in star database: " + lastMovieId);
-            }
-          } else {
-            throw new SQLException("Failed to read database");
-          }
-        }
-      }
-
-      // Query next page
+      final int id = getDatabaseId(lastMovieId);
 
       final Uri uri = MovieEntry.CONTENT_URI.buildUpon()
           .appendQueryParameter("limit", String.valueOf(pageSize))
@@ -156,49 +187,32 @@ public final class MovieRepository {
     });
   }
 
-  public LiveData<List<MovieItem>> getMoviesPage() {
-    return liveMoviesPage;
-  }
-
-  public LiveData<Boolean> getLoadingStatus() {
-    return liveLoadingStatus;
-  }
-
-  // -----------------------------------------------------------------------------------------------
-  // Movie detail
-
-  public void loadMovieDetail(int movieId) {
-    Call<MovieDetail> movieApiCall =
-        movieApi.getMovieDetail(movieId, ApiUtils.detailQueryOptions());
-    networkExecutor.execute(() -> movieApiCall.enqueue(new Callback<MovieDetail>() {
-
-      @Override
-      public void onResponse(@NonNull Call<MovieDetail> call,
-                             @NonNull Response<MovieDetail> response) {
-        if (response.isSuccessful()) {
-          liveMovieDetail.postValue(response.body());
-          Log.d(TAG, "Finished loading movie detail, movie_id " + movieId);
+  /** Get database id of movie by its TMDB id */
+  private int getDatabaseId(int movieId) {
+    if (movieId == -1) {
+      // First page
+      return movieId;
+    } else try (Cursor cursor = application.getContentResolver().query(
+        MovieEntry.CONTENT_URI,
+        new String[]{MovieEntry._ID},
+        MovieEntry.COLUMN_MOVIE_ID + " = ?",
+        new String[]{String.valueOf(movieId)},
+        null)) {
+      if (cursor != null) {
+        if (cursor.moveToNext()) {
+          return cursor.getInt(cursor.getColumnIndex(MovieEntry._ID));
         } else {
-          Log.d(TAG, "Failed to load movie detail, movie_id " + movieId + ". Error code: " + response.code());
+          throw new IllegalArgumentException("Movie not found in star database: " + movieId);
         }
+      } else {
+        throw new SQLException("Failed to read database");
       }
-
-      @Override
-      public void onFailure(@NonNull Call<MovieDetail> call,
-                            @NonNull Throwable t) {
-        Log.d(TAG, "Failed to load movie detail, movie_id " + movieId);
-      }
-    }));
-  }
-
-  public LiveData<MovieDetail> getMovieDetail() {
-    return liveMovieDetail;
+    }
   }
 
   /** Load starred movie by its movieId */
   public void getStarredMovie(@NonNull MovieDetail movie, ConsumerCallback<Cursor> callback) {
     new AsyncFuncWithCallback<Cursor>(diskExecutor, mainThreadExecutor) {
-
       @Override
       public Cursor func() {
         Log.d(TAG, "Reading from star database: movie_id " + movie.getId());
@@ -229,7 +243,6 @@ public final class MovieRepository {
   /** Save movie to local star db and return row id */
   public void starMovie(@NonNull MovieDetail movie, ConsumerCallback<Long> callback) {
     new AsyncFuncWithCallback<Long>(diskExecutor, mainThreadExecutor) {
-
       @Override
       public Long func() {
         // WARNING: Assumes the movie object is legit
@@ -264,7 +277,6 @@ public final class MovieRepository {
   /** Remove starred movie from local star database */
   public void unstarMovie(long id, ConsumerCallback<Void> callback) {
     new AsyncFuncWithCallback<Void>(diskExecutor, mainThreadExecutor) {
-
       @Override
       public Void func() {
         Log.d(TAG, "Unstarring movie, database_id " + id);

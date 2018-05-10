@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:paddingBottom="@dimen/application_spacing"
+    android:paddingTop="@dimen/application_spacing">
+
+    <TextView
+        android:id="@+id/tv_trailer_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/ic_play_circle_32dp"
+        android:drawablePadding="@dimen/application_spacing"
+        android:drawableStart="@drawable/ic_play_circle_32dp"
+        android:gravity="center_vertical"
+        tools:text="Official Trailer" />
+
+</FrameLayout>

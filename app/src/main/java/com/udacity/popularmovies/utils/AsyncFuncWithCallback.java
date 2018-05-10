@@ -36,7 +36,6 @@ public abstract class AsyncFuncWithCallback<T> {
       ListeningExecutorService service = MoreExecutors.listeningDecorator((ExecutorService) funcExecutor);
       ListenableFuture<T> future = service.submit(this::func);
       Futures.addCallback(future, new FutureCallback<T>() {
-
         @Override
         public void onSuccess(@NonNull T result) {
           AsyncFuncWithCallback.this.onSuccess(result);
