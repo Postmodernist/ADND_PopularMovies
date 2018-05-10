@@ -1,9 +1,9 @@
 package com.udacity.popularmovies.api;
 
 import com.udacity.popularmovies.model.detail.MovieDetail;
+import com.udacity.popularmovies.model.detail.MovieReviews;
 import com.udacity.popularmovies.model.detail.MovieVideos;
 import com.udacity.popularmovies.model.discover.MoviePage;
-import com.udacity.popularmovies.utils.ApiUtils;
 
 import java.util.Map;
 
@@ -21,4 +21,7 @@ public interface MovieApi {
 
   @GET(ApiUtils.DETAIL_PATH + "{id}/videos")
   Call<MovieVideos> getMovieVideos(@Path("id") int movieId, @QueryMap Map<String, String> options);
+
+  @GET(ApiUtils.DETAIL_PATH + "{id}/reviews")
+  Call<MovieReviews> getMovieReviews(@Path("id") int movieId, @QueryMap Map<String, String> options);
 }

@@ -11,7 +11,7 @@ import com.udacity.popularmovies.api.MovieApi;
 import com.udacity.popularmovies.di.qualifiers.DiskExecutor;
 import com.udacity.popularmovies.di.qualifiers.MainThreadExecutor;
 import com.udacity.popularmovies.di.qualifiers.NetworkExecutor;
-import com.udacity.popularmovies.utils.ApiUtils;
+import com.udacity.popularmovies.api.ApiUtils;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -64,7 +64,7 @@ public class ApplicationModule {
   @Singleton
   Retrofit provideRetrofit() {
     return new Retrofit.Builder()
-        .baseUrl(ApiUtils.BASE_URL)
+        .baseUrl(ApiUtils.TMDB_BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
         .build();
   }

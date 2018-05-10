@@ -3,6 +3,7 @@ package com.udacity.popularmovies.fragments;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
@@ -13,7 +14,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,10 +27,11 @@ import com.squareup.picasso.Picasso;
 import com.udacity.popularmovies.MovieApplication;
 import com.udacity.popularmovies.R;
 import com.udacity.popularmovies.activities.MainActivity;
+import com.udacity.popularmovies.api.ApiUtils;
 import com.udacity.popularmovies.di.components.DaggerDetailFragmentComponent;
 import com.udacity.popularmovies.model.detail.MovieDetail;
+import com.udacity.popularmovies.model.detail.MovieReview;
 import com.udacity.popularmovies.model.detail.MovieVideo;
-import com.udacity.popularmovies.utils.ApiUtils;
 import com.udacity.popularmovies.viewmodels.MovieViewModel;
 
 import java.text.ParseException;
@@ -48,7 +49,6 @@ import butterknife.ButterKnife;
 
 public class DetailFragment extends Fragment {
 
-  private static final String TAG = "TAG_" + DetailFragment.class.getSimpleName();
   private static final String KEY_MOVIE_ID = "movie_id";
   private static final String KEY_POSITION = "position";
 
@@ -60,8 +60,8 @@ public class DetailFragment extends Fragment {
   @BindView(R.id.tv_vote_average) TextView voteAverageView;
   @BindView(R.id.tv_overview) TextView overviewView;
   @BindView(R.id.b_star) Button starButton;
-  @BindView(R.id.trailers_label) TextView trailersLabel;
-  @BindView(R.id.trailers) LinearLayout trailersLayout;
+  @BindView(R.id.ll_trailers) LinearLayout trailersLayout;
+  @BindView(R.id.ll_reviews) LinearLayout reviewsLayout;
 
   @Inject MovieViewModel viewModel;
 
@@ -120,24 +120,20 @@ public class DetailFragment extends Fragment {
   }
 
   private void setupViewModel(int movieId, int position) {
-    movieDetailLiveData = viewModel.getMovieDetail(movieId, position);
-    starObserver = this::setupStarButton;
-    movieDetailLiveData.observe(this, starObserver);
+    viewModel.setDetailMovieId(movieId);
+    movieDetailLiveData = viewModel.getMovieDetail(position);
+    movieDetailLiveData.observe(this, (starObserver = this::setupStarButton));
     movieDetailLiveData.observe(this, this::populateViews);
-    viewModel.getMovieTrailers(movieId).observe(this, this::populateTrailers);
+    viewModel.getMovieTrailers().observe(this, this::populateTrailers);
+    viewModel.getMovieReviews().observe(this, this::populateReviews);
   }
 
   /** If movie is not starred set button to "Star", otherwise set button to "Unstar" */
-  private void setupStarButton(MovieDetail movie) {
-    if (movie == null) {
-      Log.e(TAG, "Movie object is null");
-      return;
-    }
-
+  private void setupStarButton(@NonNull MovieDetail movie) {
     // This function only needs to be called once, so unsubscribe
     movieDetailLiveData.removeObserver(starObserver);
+    // Disable star button until it's properly set up
     disableStarButton();
-
     // Forward the rest to ViewModel
     viewModel.initStarButton(movie, this::disableStarButton, this::enableStarButton);
   }
@@ -155,12 +151,7 @@ public class DetailFragment extends Fragment {
     starButton.setOnClickListener(null);
   }
 
-  private void populateViews(MovieDetail movie) {
-    if (movie == null) {
-      Log.e(TAG, "Movie object is null");
-      return;
-    }
-
+  private void populateViews(@NonNull MovieDetail movie) {
     final String NOT_AVAILABLE = getString(R.string.not_available);
     String sTmp;
     Integer iTmp;
@@ -178,11 +169,13 @@ public class DetailFragment extends Fragment {
         getString(R.string.runtime_text, iTmp) : NOT_AVAILABLE);
   }
 
-  private void populateTrailers(List<MovieVideo> trailers) {
+  private void populateTrailers(@NonNull List<MovieVideo> trailers) {
     LayoutInflater inflater = LayoutInflater.from(getContext());
 
+    trailersLayout.removeAllViews();
+
     if (trailers.size() == 0) {
-      View noAvail = inflater.inflate(R.layout.trailer_list_item_no_avail, trailersLayout, false);
+      View noAvail = inflater.inflate(R.layout.list_item_no_avail, trailersLayout, false);
       trailersLayout.addView(noAvail);
       return;
     }
@@ -190,8 +183,41 @@ public class DetailFragment extends Fragment {
     for (MovieVideo trailer : trailers) {
       View trailerView = inflater.inflate(R.layout.trailer_list_item, trailersLayout, false);
       TextView title = trailerView.findViewById(R.id.tv_trailer_title);
+
       title.setText(trailer.getName());
+
+      trailerView.setOnClickListener(view -> {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(ApiUtils.youtubeUri(trailer.getKey()));
+        if (intent.resolveActivity(mainActivity.getPackageManager()) != null) {
+          startActivity(intent);
+        }
+      });
+
       trailersLayout.addView(trailerView);
+    }
+  }
+
+  private void populateReviews(@NonNull List<MovieReview> reviews) {
+    LayoutInflater inflater = LayoutInflater.from(getContext());
+
+    reviewsLayout.removeAllViews();
+
+    if (reviews.size() == 0) {
+      View noAvail = inflater.inflate(R.layout.list_item_no_avail, reviewsLayout, false);
+      reviewsLayout.addView(noAvail);
+      return;
+    }
+
+    for (MovieReview review : reviews) {
+      View reviewView = inflater.inflate(R.layout.review_list_item, reviewsLayout, false);
+      TextView author = reviewView.findViewById(R.id.tv_author);
+      TextView content = reviewView.findViewById(R.id.tv_content);
+
+      author.setText(review.getAuthor());
+      content.setText(review.getContent());
+
+      reviewsLayout.addView(reviewView);
     }
   }
 
@@ -217,23 +243,28 @@ public class DetailFragment extends Fragment {
     int displayHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
     int widthRatio = getResources().getInteger(R.integer.poster_width_ratio);
     int heightRatio = getResources().getInteger(R.integer.poster_height_ratio);
-    int width;
-    int height;
+
+    RelativeLayout.LayoutParams layoutParams;
+
     if (displayWidth < displayHeight) {
+
       // Portrait
-      width = displayWidth / 2;
-      height = width * heightRatio / widthRatio;
+
+      int width = (int) (displayWidth / 2.0 + 0.5f);
+      int height = (int) (width * heightRatio / (float) widthRatio + 0.5f);
+      layoutParams = new RelativeLayout.LayoutParams(width, height);
     } else {
+
       // Landscape
+
       int contentViewTop = getStatusAndAppBarHeight();
-      int margins = (int) (getResources().getDimension(R.dimen.application_margin) * 2 + 0.5f);
-      height = displayHeight - contentViewTop - margins;
-      width = height * widthRatio / heightRatio;
+      int margin = (int) (getResources().getDimension(R.dimen.application_margin) + 0.5f);
+      int height = displayHeight - contentViewTop - margin * 2;
+      int width = (int) (height * widthRatio / (float) heightRatio + 0.5f);
+      layoutParams = new RelativeLayout.LayoutParams(width, height);
+      layoutParams.setMargins(margin, margin, 0, margin);
     }
 
-    final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(width, height);
-    int margin = (int) (getResources().getDimension(R.dimen.application_margin) + 0.5f);
-    layoutParams.setMargins(0, 0, margin, 0);
     posterView.setLayoutParams(layoutParams);
   }
 
@@ -248,7 +279,7 @@ public class DetailFragment extends Fragment {
     }
     // App bar height
     int[] attrs = new int[]{android.R.attr.actionBarSize};
-    final TypedArray styledAttributes = Objects.requireNonNull(getActivity()).getTheme().obtainStyledAttributes(attrs);
+    final TypedArray styledAttributes = mainActivity.getTheme().obtainStyledAttributes(attrs);
     int appBarHeight = (int) styledAttributes.getDimension(0, 0);
     styledAttributes.recycle();
     return statusBarHeight + appBarHeight;

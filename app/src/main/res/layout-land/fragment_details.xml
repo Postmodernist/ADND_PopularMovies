@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="@dimen/application_margin">
+    android:layout_height="match_parent">
 
     <TextView
         android:id="@+id/tv_error"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="@dimen/application_margin"
         android:gravity="center_horizontal"
         android:text="@string/no_info"
         android:textSize="@dimen/error_text_size"
@@ -25,8 +25,10 @@
             android:layout_width="160dp"
             android:layout_height="match_parent"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="@dimen/application_margin"
-            android:layout_marginRight="@dimen/application_margin"
+            android:layout_marginBottom="@dimen/application_margin"
+            android:layout_marginLeft="@dimen/application_margin"
+            android:layout_marginStart="@dimen/application_margin"
+            android:layout_marginTop="@dimen/application_margin"
             android:contentDescription="@string/poster_description"
             android:scaleType="centerCrop"
             tools:background="#B0B0B0" />
@@ -39,7 +41,8 @@
 
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:padding="@dimen/application_margin">
 
                 <TextView
                     android:id="@+id/tv_release_date_label"
@@ -164,7 +167,7 @@
                     tools:text="Every child comes into the world full of promise, and none more so than Chappie: he is gifted, special, a prodigy. Chappie he is a robot." />
 
                 <TextView
-                    android:id="@+id/trailers_label"
+                    android:id="@+id/tv_trailers_label"
                     style="@style/text_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -174,7 +177,7 @@
                     app:layout_constraintTop_toBottomOf="@id/tv_overview" />
 
                 <LinearLayout
-                    android:id="@+id/trailers"
+                    android:id="@+id/ll_trailers"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:divider="?android:listDivider"
@@ -182,12 +185,30 @@
                     android:showDividers="middle"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/trailers_label" />
+                    app:layout_constraintTop_toBottomOf="@id/tv_trailers_label" />
 
-                <View
+                <TextView
+                    android:id="@+id/tv_reviews_label"
+                    style="@style/text_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/ll_trailers"
+                    android:layout_marginTop="@dimen/application_margin"
+                    android:text="@string/reviews_label"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/ll_trailers" />
+
+                <LinearLayout
+                    android:id="@+id/ll_reviews"
                     android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    app:layout_constraintTop_toBottomOf="@id/trailers" />
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_reviews_label"
+                    android:divider="?android:listDivider"
+                    android:orientation="vertical"
+                    android:showDividers="middle"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_reviews_label" />
 
             </android.support.constraint.ConstraintLayout>
         </ScrollView>

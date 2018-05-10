@@ -17,11 +17,13 @@ import com.udacity.popularmovies.di.qualifiers.DiskExecutor;
 import com.udacity.popularmovies.di.qualifiers.MainThreadExecutor;
 import com.udacity.popularmovies.di.qualifiers.NetworkExecutor;
 import com.udacity.popularmovies.model.detail.MovieDetail;
+import com.udacity.popularmovies.model.detail.MovieReview;
+import com.udacity.popularmovies.model.detail.MovieReviews;
 import com.udacity.popularmovies.model.detail.MovieVideo;
 import com.udacity.popularmovies.model.detail.MovieVideos;
 import com.udacity.popularmovies.model.discover.MovieItem;
 import com.udacity.popularmovies.model.discover.MoviePage;
-import com.udacity.popularmovies.utils.ApiUtils;
+import com.udacity.popularmovies.api.ApiUtils;
 import com.udacity.popularmovies.utils.AsyncFuncWithCallback;
 
 import java.util.ArrayList;
@@ -59,6 +61,7 @@ public final class MovieRepository {
   private MutableLiveData<Boolean> liveLoadingStatus = new MutableLiveData<>();
   private MutableLiveData<MovieDetail> liveMovieDetail = new MutableLiveData<>();
   private MutableLiveData<List<MovieVideo>> liveMovieVideos = new MutableLiveData<>();
+  private MutableLiveData<List<MovieReview>> liveMovieReviews = new MutableLiveData<>();
 
   @Inject
   MovieRepository() {
@@ -79,6 +82,10 @@ public final class MovieRepository {
 
   public LiveData<List<MovieVideo>> getMovieVideos() {
     return liveMovieVideos;
+  }
+
+  public LiveData<List<MovieReview>> getMovieReviews() {
+    return liveMovieReviews;
   }
 
   public void loadMoviesPage(String sortBy, int page) {
@@ -142,6 +149,28 @@ public final class MovieRepository {
       @Override
       public void onFailure(@NonNull Call<MovieVideos> call, @NonNull Throwable t) {
         Log.d(TAG, "Failed to load movie videos, call " + call.toString());
+      }
+    }));
+  }
+
+  public void loadMovieReviews(int movieId) {
+    Call<MovieReviews> call = movieApi.getMovieReviews(movieId, ApiUtils.reviewsQueryOptions());
+    networkExecutor.execute(() -> call.enqueue(new Callback<MovieReviews>() {
+      @Override
+      public void onResponse(@NonNull Call<MovieReviews> call, @NonNull Response<MovieReviews> response) {
+        if (response.isSuccessful()) {
+          MovieReviews movieReviews = response.body();
+          List<MovieReview> results = movieReviews != null ? movieReviews.getResults() : null;
+          liveMovieReviews.postValue(results != null ? results : new ArrayList<>(0));
+          Log.d(TAG, "Finished loading movie reviews, movie_id " + movieId);
+        } else {
+          Log.d(TAG, "Failed to load movie reviews, movie_id " + movieId + ". Error code: " + response.code());
+        }
+      }
+
+      @Override
+      public void onFailure(@NonNull Call<MovieReviews> call, @NonNull Throwable t) {
+        Log.d(TAG, "Failed to load movie reviews, call " + call.toString());
       }
     }));
   }

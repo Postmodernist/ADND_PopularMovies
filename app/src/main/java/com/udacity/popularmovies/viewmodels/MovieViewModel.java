@@ -12,12 +12,13 @@ import android.util.SparseArray;
 import android.view.View;
 
 import com.udacity.popularmovies.R;
+import com.udacity.popularmovies.api.ApiUtils;
 import com.udacity.popularmovies.database.MovieContract;
 import com.udacity.popularmovies.model.detail.MovieDetail;
+import com.udacity.popularmovies.model.detail.MovieReview;
 import com.udacity.popularmovies.model.detail.MovieVideo;
 import com.udacity.popularmovies.model.discover.MovieItem;
 import com.udacity.popularmovies.repositories.MovieRepository;
-import com.udacity.popularmovies.utils.ApiUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,7 @@ public class MovieViewModel extends ViewModel {
   private static final int STARTING_PAGE = 1;
   private static final int PAGE_SIZE = 20;
   private static final List<MovieVideo> EMPTY_VIDEOS_LIST = new ArrayList<>(0);
+  private static final List<MovieReview> EMPTY_REVIEWS_LIST = new ArrayList<>(0);
 
   private MovieRepository movieRepo;
   private SharedPreferences sharedPrefs;
@@ -37,16 +39,17 @@ public class MovieViewModel extends ViewModel {
   private MediatorLiveData<Boolean> liveLoadingStatus = new MediatorLiveData<>();
   private MediatorLiveData<MovieDetail> liveMovieDetail = new MediatorLiveData<>();
   private LiveData<List<MovieVideo>> liveMovieTrailers;
+  private MediatorLiveData<List<MovieReview>> liveMovieReviews = new MediatorLiveData<>();
 
   private boolean isInitialized = false;
   private ListMode listMode;
   private List<MovieItem> movieList = new ArrayList<>(100);
   private List<MovieVideo> trailerList = EMPTY_VIDEOS_LIST;
-  private int page = STARTING_PAGE;
+  private int page = STARTING_PAGE;  // for discovery list paging
   private int listSize;  // for starred list updating
   private int lastStarredMovieId = -1;  // for starred list paging
+  private int detailMovieId = -1;
   private int lastDetailMovieId = -1;  // for avoiding unnecessary detail reload
-  private int lastTrailersMovieId = -1;  // for avoiding unnecessary trailers reload
 
   MovieViewModel(MovieRepository movieRepo, SharedPreferences sharedPrefs) {
     this.movieRepo = movieRepo;
@@ -62,6 +65,9 @@ public class MovieViewModel extends ViewModel {
     Log.d(TAG, "Initializing ViewModel");
 
     listMode = ListMode.fromId(sharedPrefs.getInt(LIST_MODE_KEY, ListMode.MOST_POPULAR.id));
+    liveLoadingStatus.addSource(movieRepo.getLoadingStatus(), liveLoadingStatus::setValue);
+    liveMovieDetail.addSource(movieRepo.getMovieDetail(), liveMovieDetail::setValue);
+    liveMovieReviews.addSource(movieRepo.getMovieReviews(), liveMovieReviews::setValue);
 
     liveMovieList = Transformations.map(movieRepo.getMoviesPage(), movies -> {
       if (movies != null) {
@@ -93,9 +99,12 @@ public class MovieViewModel extends ViewModel {
       return trailerList;
     });
 
-    liveLoadingStatus.addSource(movieRepo.getLoadingStatus(), liveLoadingStatus::setValue);
-    liveMovieDetail.addSource(movieRepo.getMovieDetail(), liveMovieDetail::setValue);
     loadMore();
+  }
+
+  public void setDetailMovieId(int detailMovieId) {
+    lastDetailMovieId = this.detailMovieId;
+    this.detailMovieId = detailMovieId;
   }
 
   public LiveData<List<MovieItem>> getMovieList() {
@@ -120,22 +129,28 @@ public class MovieViewModel extends ViewModel {
     return true;
   }
 
-  public LiveData<MovieDetail> getMovieDetail(int movieId, int position) {
-    if (lastDetailMovieId != movieId) {
-      lastDetailMovieId = movieId;
+  public LiveData<MovieDetail> getMovieDetail(int position) {
+    if (lastDetailMovieId != detailMovieId) {
       liveMovieDetail.setValue(new MovieDetail(movieList.get(position)));
-      movieRepo.loadMovieDetail(movieId);
+      movieRepo.loadMovieDetail(detailMovieId);
     }
     return liveMovieDetail;
   }
 
-  public LiveData<List<MovieVideo>> getMovieTrailers(int movieId) {
-    if (lastTrailersMovieId != movieId) {
-      lastTrailersMovieId = movieId;
+  public LiveData<List<MovieVideo>> getMovieTrailers() {
+    if (lastDetailMovieId != detailMovieId) {
       trailerList.clear();
-      movieRepo.loadMovieVideos(movieId);
+      movieRepo.loadMovieVideos(detailMovieId);
     }
     return liveMovieTrailers;
+  }
+
+  public LiveData<List<MovieReview>> getMovieReviews() {
+    if (lastDetailMovieId != detailMovieId) {
+      liveMovieReviews.setValue(EMPTY_REVIEWS_LIST);
+      movieRepo.loadMovieReviews(detailMovieId);
+    }
+    return liveMovieReviews;
   }
 
   public void refresh() {

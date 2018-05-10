@@ -6,7 +6,7 @@
     <dimen name="detail_text_size">30sp</dimen>
     <dimen name="button_text_size">14sp</dimen>
     <integer name="grid_columns_portrait">2</integer>
-    <integer name="grid_columns_landscape">3</integer>
+    <integer name="grid_columns_landscape">4</integer>
     <integer name="poster_width_ratio">2</integer>
     <integer name="poster_height_ratio">3</integer>
 </resources>

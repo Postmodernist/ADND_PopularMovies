@@ -21,5 +21,6 @@
     <string name="star_button_text">Star</string>
     <string name="unstar_button_text">Unstar</string>
     <string name="trailers_label">Trailers</string>
+    <string name="reviews_label">Reviews</string>
 
 </resources>

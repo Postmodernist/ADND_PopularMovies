@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="@dimen/application_margin"
+    android:paddingTop="@dimen/application_margin">
+
+    <TextView
+        android:id="@+id/tv_author"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        tools:text="furious_iz" />
+
+    <TextView
+        android:id="@+id/tv_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_author"
+        android:layout_marginTop="@dimen/application_spacing"
+        tools:text="Amazing.  Visually stunning.  So much going on, but somehow also clear and easy to understand.  A little flabby in the middle third, but given the huge cast and story to cover it is very understandable.  The highlight was the parings of characters from different stories and their interactions." />
+
+</RelativeLayout>

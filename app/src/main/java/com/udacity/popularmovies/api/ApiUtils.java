@@ -1,4 +1,4 @@
-package com.udacity.popularmovies.utils;
+package com.udacity.popularmovies.api;
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -15,7 +15,7 @@ public final class ApiUtils {
   public static final String SORT_BY_RATING = "vote_average.desc";
 
   // TheMovieDB API base URL
-  public static final String BASE_URL = "https://api.themoviedb.org/3/";
+  public static final String TMDB_BASE_URL = "https://api.themoviedb.org/3/";
   public static final String DISCOVER_PATH = "discover/movie";
   public static final String DETAIL_PATH = "movie/";
 
@@ -40,6 +40,11 @@ public final class ApiUtils {
   private static final String adult = "false";
   private static final String video = "false";
   private static final String vote_count_min = "100";
+
+  // Youtube
+  private static final String YOUTUBE_BASE_URL = "https://www.youtube.com/watch";
+  private static final Uri YOUTUBE_URI = Uri.parse(YOUTUBE_BASE_URL);
+  private static final String KEY_PARAM = "v";
 
   private ApiUtils() {
     // Prevents instantiation
@@ -73,6 +78,15 @@ public final class ApiUtils {
     return options;
   }
 
+  /** Build options for reviews query */
+  public static Map<String, String> reviewsQueryOptions() {
+    Map<String, String> options = new ArrayMap<>(3);
+    options.put(API_KEY_PARAM, api_key);
+    options.put(LANGUAGE_PARAM, language);
+    options.put(PAGE_PARAM, "1");
+    return options;
+  }
+
   /** Build poster URL */
   @NonNull
   public static String posterUrl(String posterPath) {
@@ -83,4 +97,12 @@ public final class ApiUtils {
             .toString()
         : IMAGE_PLACEHOLDER;
   }
+
+  /** Build YouTube URI */
+  public static Uri youtubeUri(String key) {
+    return YOUTUBE_URI.buildUpon()
+        .appendQueryParameter(KEY_PARAM, key)
+        .build();
+  }
+
 }

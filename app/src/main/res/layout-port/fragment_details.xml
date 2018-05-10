@@ -2,14 +2,12 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clipToPadding="false"
-    android:padding="@dimen/application_margin"
-    android:scrollbarStyle="outsideOverlay">
+    android:layout_height="match_parent">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="@dimen/application_margin">
 
         <TextView
             android:id="@+id/tv_error"
@@ -29,8 +27,6 @@
                 android:id="@+id/iv_poster"
                 android:layout_width="160dp"
                 android:layout_height="240dp"
-                android:layout_marginEnd="@dimen/application_margin"
-                android:layout_marginRight="@dimen/application_margin"
                 android:contentDescription="@string/poster_description"
                 android:scaleType="centerCrop"
                 tools:background="#B0B0B0" />
@@ -38,6 +34,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/application_margin"
+                android:layout_marginStart="@dimen/application_margin"
                 android:layout_toEndOf="@id/iv_poster"
                 android:layout_toRightOf="@id/iv_poster"
                 android:orientation="vertical">
@@ -123,7 +121,7 @@
                 tools:text="Every child comes into the world full of promise, and none more so than Chappie: he is gifted, special, a prodigy. Chappie he is a robot." />
 
             <TextView
-                android:id="@+id/trailers_label"
+                android:id="@+id/tv_trailers_label"
                 style="@style/text_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -132,18 +130,31 @@
                 android:text="@string/trailers_label" />
 
             <LinearLayout
-                android:id="@+id/trailers"
+                android:id="@+id/ll_trailers"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/trailers_label"
+                android:layout_below="@id/tv_trailers_label"
                 android:divider="?android:listDivider"
                 android:orientation="vertical"
                 android:showDividers="middle" />
 
-            <View
+            <TextView
+                android:id="@+id/tv_reviews_label"
+                style="@style/text_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/ll_trailers"
+                android:layout_marginTop="@dimen/application_margin"
+                android:text="@string/reviews_label" />
+
+            <LinearLayout
+                android:id="@+id/ll_reviews"
                 android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_below="@id/trailers" />
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_reviews_label"
+                android:divider="?android:listDivider"
+                android:orientation="vertical"
+                android:showDividers="middle" />
 
         </RelativeLayout>
     </FrameLayout>
