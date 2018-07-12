@@ -6,8 +6,11 @@ https://www.themoviedb.org API as a source of content.
 
 Used in **Android Developer Nanodegree** program.
 
-<img src="images/screenshot_01.jpg" alt="Scrollable list of movies" width="338" height="600"> <img src="images/screenshot_03.jpg" alt="Movie details" width="338" height="600"> <img src="images/screenshot_04.jpg" alt="Reviews" width="338" height="600">
-<img src="images/screenshot_05.jpg" alt="Scrollable list of movies" width="600" height="338"> <img src="images/screenshot_06.jpg" alt="Movie details" width="600" height="338">
+![](images/screenshot_01.jpg "Scrollable list of movies")
+![](images/screenshot_03.jpg "Movie details")
+![](images/screenshot_04.jpg "Reviews")
+![](images/screenshot_05.jpg "Scrollable list of movies")
+![](images/screenshot_06.jpg "Movie details")
 
 ## Dependencies
 
