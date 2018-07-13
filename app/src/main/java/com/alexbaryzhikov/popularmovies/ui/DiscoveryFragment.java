@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,8 +33,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class DiscoveryFragment extends Fragment {
-
-  private static final String TAG = "TAG_" + DiscoveryFragment.class.getSimpleName();
 
   @BindView(R.id.rv_movies) RecyclerView moviesView;
   @BindView(R.id.tv_error) TextView errorView;
@@ -107,7 +104,6 @@ public class DiscoveryFragment extends Fragment {
       @Override
       public void onLoadMore() {
         if (ConnectionUtils.isOnline(mainActivity.getApplication())) {
-          Log.d(TAG, "Requesting more data...");
           viewModel.loadMore();
         }
       }
@@ -173,17 +169,14 @@ public class DiscoveryFragment extends Fragment {
         return true;
 
       case R.id.action_most_popular:
-        Log.d(TAG, "Most popular sorting selected");
         setListMode(ListMode.MOST_POPULAR, R.string.most_popular_title);
         return true;
 
       case R.id.action_top_rated:
-        Log.d(TAG, "Top rated sorting selected");
         setListMode(ListMode.TOP_RATED, R.string.top_rated_title);
         return true;
 
       case R.id.action_starred:
-        Log.d(TAG, "Starred movies selected");
         setListMode(ListMode.STARRED, R.string.starred_title);
         return true;
 

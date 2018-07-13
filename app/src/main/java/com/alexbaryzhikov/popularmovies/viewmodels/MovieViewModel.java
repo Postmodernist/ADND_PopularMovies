@@ -7,7 +7,6 @@ import android.arch.lifecycle.ViewModel;
 import android.content.SharedPreferences;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.StringRes;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 
@@ -25,7 +24,6 @@ import java.util.List;
 
 public class MovieViewModel extends ViewModel {
 
-  private static final String TAG = "TAG_" + MovieViewModel.class.getSimpleName();
   private static final String LIST_MODE_KEY = "LIST_MODE";
   private static final int STARTING_PAGE = 1;
   private static final int PAGE_SIZE = 20;
@@ -62,7 +60,6 @@ public class MovieViewModel extends ViewModel {
     }
 
     isInitialized = true;
-    Log.d(TAG, "Initializing ViewModel");
 
     listMode = ListMode.fromId(sharedPrefs.getInt(LIST_MODE_KEY, ListMode.MOST_POPULAR.id));
     liveLoadingStatus.addSource(movieRepo.getLoadingStatus(), liveLoadingStatus::setValue);
@@ -154,7 +151,6 @@ public class MovieViewModel extends ViewModel {
   }
 
   public void refresh() {
-    Log.d(TAG, "Reloading movies");
     movieList.clear();
     page = STARTING_PAGE;
     lastStarredMovieId = -1;
@@ -162,7 +158,6 @@ public class MovieViewModel extends ViewModel {
   }
 
   private void refreshStarred() {
-    Log.d(TAG, "Reloading starred movies");
     movieList.clear();
     movieRepo.loadStarred(-1, listSize);
   }
@@ -184,14 +179,12 @@ public class MovieViewModel extends ViewModel {
   /** Check local db if this movie is starred */
   public void initStarButton(MovieDetail movie, Runnable disableStarCallback,
                              EnableStarCallback enableStarCallback) {
-    Log.d(TAG, "Initializing Star button...");
     movieRepo.getStarredMovie(movie, cursor -> {
       long id = -1;
       if (cursor.getCount() == 1) {
         cursor.moveToNext();
         id = cursor.getInt(cursor.getColumnIndex(MovieContract.MovieEntry._ID));
       }
-      Log.d(TAG, id != -1 ? "Movie is starred, database_id " + id : "Movie is NOT starred");
       setupStarButton(movie, disableStarCallback, enableStarCallback, id);
     });
     // Save movie list size

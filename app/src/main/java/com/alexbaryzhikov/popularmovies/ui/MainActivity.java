@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     DetailFragment fragment = DetailFragment.forMovie(movieId, position);
     getSupportFragmentManager()
         .beginTransaction()
-        .addToBackStack("MovieDetails")
+        .addToBackStack("DetailFragment")
         .replace(R.id.fragment_container, fragment, null)
         .commit();
   }
