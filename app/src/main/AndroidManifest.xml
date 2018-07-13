@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.udacity.popularmovies">
+    package="com.alexbaryzhikov.popularmovies">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:name=".MovieApplication"
+        android:name="com.alexbaryzhikov.popularmovies.MovieApplication"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_descriptor"
         android:icon="@mipmap/ic_launcher"
@@ -18,7 +18,7 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <activity
-            android:name=".activities.MainActivity"
+            android:name="com.alexbaryzhikov.popularmovies.ui.MainActivity"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,8 +28,8 @@
         </activity>
 
         <provider
-            android:name=".database.MovieContentProvider"
-            android:authorities="com.udacity.popularmovies.provider"
+            android:name="com.alexbaryzhikov.popularmovies.database.MovieContentProvider"
+            android:authorities="com.alexbaryzhikov.popularmovies.provider"
             android:exported="false" />
 
     </application>
