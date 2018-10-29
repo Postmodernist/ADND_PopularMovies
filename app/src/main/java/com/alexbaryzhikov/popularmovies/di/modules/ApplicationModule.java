@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.alexbaryzhikov.popularmovies.api.MovieApi;
 import com.alexbaryzhikov.popularmovies.di.qualifiers.DiskExecutor;

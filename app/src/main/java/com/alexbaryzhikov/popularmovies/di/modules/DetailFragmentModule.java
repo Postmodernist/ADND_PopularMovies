@@ -1,6 +1,6 @@
 package com.alexbaryzhikov.popularmovies.di.modules;
 
-import android.arch.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProviders;
 
 import com.alexbaryzhikov.popularmovies.ui.MainActivity;
 import com.alexbaryzhikov.popularmovies.di.scopes.DetailFragmentScope;

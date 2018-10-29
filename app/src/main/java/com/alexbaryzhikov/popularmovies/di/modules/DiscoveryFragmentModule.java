@@ -1,10 +1,10 @@
 package com.alexbaryzhikov.popularmovies.di.modules;
 
-import android.arch.lifecycle.Lifecycle;
-import android.arch.lifecycle.ViewModelProviders;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.res.Resources;
-import android.support.v7.widget.GridLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.alexbaryzhikov.popularmovies.R;
 import com.alexbaryzhikov.popularmovies.ui.MainActivity;

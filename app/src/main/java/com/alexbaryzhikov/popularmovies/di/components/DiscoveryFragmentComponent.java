@@ -1,6 +1,6 @@
 package com.alexbaryzhikov.popularmovies.di.components;
 
-import android.support.v7.widget.GridLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.alexbaryzhikov.popularmovies.di.modules.DiscoveryFragmentModule;
 import com.alexbaryzhikov.popularmovies.di.scopes.DiscoveryFragmentScope;

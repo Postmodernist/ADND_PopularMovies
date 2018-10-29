@@ -1,14 +1,14 @@
 package com.alexbaryzhikov.popularmovies.repositories;
 
 import android.app.Application;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.alexbaryzhikov.popularmovies.api.ApiUtils;
 import com.alexbaryzhikov.popularmovies.api.MovieApi;

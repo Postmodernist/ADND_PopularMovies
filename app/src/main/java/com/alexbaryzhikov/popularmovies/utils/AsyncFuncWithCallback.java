@@ -1,6 +1,6 @@
 package com.alexbaryzhikov.popularmovies.utils;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -35,7 +35,7 @@ public abstract class AsyncFuncWithCallback<T> {
     try {
       ListeningExecutorService service = MoreExecutors.listeningDecorator((ExecutorService) funcExecutor);
       ListenableFuture<T> future = service.submit(this::func);
-      Futures.addCallback(future, new FutureCallback<T>() {
+      FutureCallback<T> callback = new FutureCallback<T>() {
         @Override
         public void onSuccess(@NonNull T result) {
           AsyncFuncWithCallback.this.onSuccess(result);
@@ -45,7 +45,8 @@ public abstract class AsyncFuncWithCallback<T> {
         public void onFailure(@NonNull Throwable t) {
           AsyncFuncWithCallback.this.onFailure(t);
         }
-      }, callbackExecutor);
+      };
+      Futures.addCallback(future, callback, callbackExecutor);
     } catch (Exception e) {
       e.printStackTrace();
     }
